@@ -1,0 +1,40 @@
+# Binarios compilados
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Salidas de go build / coverage
+/gopherml
+/bin/
+coverage.out
+coverage.html
+*.coverprofile
+
+# Archivos de configuración de prueba
+go-nlp/nltk/
+
+# Modelos entrenados generados durante pruebas o ejemplos
+*.gob
+
+# Dependencias (por si se usa vendor en el futuro)
+/vendor/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs y temporales
+*.log
+tmp/
+/tmp/

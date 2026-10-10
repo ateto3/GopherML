@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Reportar vulnerabilidad de seguridad
+    url: https://github.com/ateto3/gopherml/security/advisories/new
+    about: No abras una issue pública para problemas de seguridad; usa el reporte privado (ver SECURITY.md).
+  - name: 📚 Documentación
+    url: https://github.com/ateto3/gopherml/tree/main/docs
+    about: Guías, referencia de API, arquitectura y FAQ antes de abrir una issue.
+  - name: ❓ Preguntas frecuentes
+    url: https://github.com/ateto3/gopherml/blob/main/docs/FAQ.md
+    about: Muchas dudas comunes ya están resueltas aquí.

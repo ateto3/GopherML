@@ -1,0 +1,54 @@
+name: ✨ Feature request
+description: Propón una nueva funcionalidad o mejora
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema que resuelve
+      description: ¿Qué necesitas hacer que hoy no es posible (o es muy difícil) con GopherML?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solución propuesta
+      description: API que te gustaría usar (seudocódigo Go bienvenido).
+      placeholder: |
+        ```go
+        model := linear_model.NewGradientBoosting()
+        model.Fit(X, y)
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área del proyecto
+      options:
+        - linear_model
+        - tree
+        - ensemble
+        - crypto
+        - metrics
+        - model_selection
+        - preprocessing
+        - persistence
+        - utils
+        - go-nlp (módulo independiente)
+        - documentación
+        - otro
+    validations:
+      required: true
+  - type: checkboxes
+    id: perf
+    attributes:
+      label: Compromiso de diseño
+      options:
+        - label: Entiendo que el núcleo mantiene **cero dependencias** y prioriza el rendimiento (ver CONTRIBUTING.md)
+          required: true

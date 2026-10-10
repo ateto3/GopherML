@@ -1,0 +1,62 @@
+name: 🐛 Bug report
+description: Reporta un comportamiento incorrecto de GopherML
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar el problema. Recuerda: para **vulnerabilidades de seguridad** sigue [SECURITY.md](https://github.com/ateto3/gopherml/security/advisories/new) y no abras una issue pública.
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: Qué esperabas que ocurriera y qué ocurrió realmente.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Pasos para reproducir
+      description: El más pequeño snippet de Go que demuestra el problema.
+      placeholder: |
+        1. Crear modelo con `ensemble.NewRandomForestClassifier()`
+        2. Llamar a `Fit(X, y)` con ...
+        3. Observar error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamiento esperado
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión / commit
+      placeholder: "commit SHA o fecha del checkout"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Entorno
+      description: SO, arquitectura y versión de Go.
+      placeholder: "Ubuntu 24.04, amd64, go1.25.6"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verificaciones
+      options:
+        - label: He ejecutado `go test ./... -race` y el fallo se reproduce
+          required: true
+        - label: He buscado en issues abiertas/cerradas y no es un duplicado
+          required: true
