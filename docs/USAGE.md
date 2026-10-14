@@ -1,32 +1,32 @@
-# GopherML — Guía de Uso
+# GopherML — User Guide
 
-GopherML es una librería de Machine Learning de alto rendimiento para Go, diseñada para bots de criptomonedas y sistemas de inferencia de baja latencia.
+GopherML is a high-performance Machine Learning library for Go, designed for cryptocurrency bots and low-latency inference systems.
 
-**Módulo:** `github.com/ateto3/gopherml`
+**Module:** `github.com/ateto3/gopherml`
 
-> 📚 **Documentación relacionada:** [Inicio rápido](docs/GETTING_STARTED.md) · [Referencia de API](docs/API_REFERENCE.md) · [Rendimiento](docs/PERFORMANCE.md) · [FAQ](docs/FAQ.md) · [Contribuir](CONTRIBUTING.md)
+> 📚 ** Related documentation:** [Quick Start](docs/GETTING_STARTED.md) · [API Reference](docs/API_REFERENCE.md) · [Performance](docs/PERFORMANCE.md) · [FAQ](docs/FAQ.md) · [Contribute](CONTRIBUTING.md)
 
 ---
 
-## 1. Instalación
+## 1. Installation
 
-### Como dependencia local (desarrollo)
+### As a local dependency (development)
 
-Añade un `replace` en el `go.mod` de tu bot:
+Add a `replace` in your bot's `go.mod`:
 
 ```go
-module github.com/tu-usuario/mi-bot
+module github.com/your-user/your-bot
 
 go 1.23
 
 require github.com/ateto3/gopherml v0.0.0
 
-replace github.com/ateto3/gopherml => /ruta/a/GopherML
+replace github.com/ateto3/gopherml => /path/to/GopherML
 ```
 
-Luego ejecuta `go mod tidy`.
+Then run `go mod tidy`.
 
-### Como módulo publicado en GitHub
+### As a module published on GitHub
 
 ```bash
 go get github.com/ateto3/gopherml@latest
@@ -34,77 +34,77 @@ go get github.com/ateto3/gopherml@latest
 
 ---
 
-## 2. Conceptos Clave
+## 2. Key Concepts
 
-### Tipos de datos
-- **X (Features):** `[][]float64` — matriz de forma `[nSamples, nFeatures]`
-- **y (Targets):** `[]float64` — vector de forma `[nSamples]`
+**Data Types**
+- **X (Features):** `[][]float64` — shape array `[nSamples, nFeatures]`
+- **y (Targets):** `[]float64` — form vector `[nSamples]`
 - **OHLCV:** `crypto.OHLCV{Open, High, Low, Close, Volume float64}`
 
-### API estándar de modelos
+### Model Standard API
 ```
-NewModel()          → Inicializar con parámetros por defecto
-Fit(X, y)          → Entrenar (valida NaN/Inf automáticamente)
-Predict(X)         → Predicción batch
-PredictSingle(x)   → Predicción de muestra única (hot path, zero alloc extra)
-PredictProba(X)    → Probabilidades por clase (para umbrales de confianza)
-Score(X, y)        → Evaluar (R² para regresión, Accuracy para clasificación)
+NewModel()          → Initialize with Default Parameters
+Fit(X, y)          → Train (validates NaN/Inf automatically)
+Predict(X)         → Batch prediction
+PredictSingle(x)   → Single sample prediction (hot path, zero alloc extra)
+PredictProba(X)    → Probabilities per class (for confidence thresholds)
+Score(X, y)        → Evaluate (R² for regression, Accuracy for classification)
 ```
 
-> **Importante:** Todos los métodos `Fit` y `Predict` rechazan automáticamente valores `NaN` o `Inf`. Nunca ignorar los errores devueltos.
+> **Important:** All `Fit` and `Predict` methods automatically reject `NaN` or `Inf` values. Never ignore returned errors.
 
 ---
 
-## 3. Paquete `crypto/` — Pipeline para Bots de Cripto
+## 3. `crypto/` package — Pipeline for Crypto Bots
 
-Este es el paquete de más alto nivel. Encapsula todo el pipeline: OHLCV → features → señal de trading.
+This is the highest level package. Encapsulates the entire pipeline: → OHLCV features trading → signal.
 
-### Uso rápido (bot en producción)
+### Quick use (bot in production)
 
 ```go
 import "github.com/ateto3/gopherml/crypto"
 
-// 1. Crear predictor con configuración
+// 1. Create predictor with settings
 cfg := crypto.DefaultPredictorConfig()
-cfg.NEstimators   = 200    // Más árboles = más estable
-cfg.MaxDepth      = 8      // Evitar overfitting
-cfg.WindowSize    = 20     // Últimas 20 velas por predicción
-cfg.MinConfidence = 0.65   // Solo operar si >65% de confianza
+cfg.NEstimators   = 200    // More trees = more stable
+cfg.MaxDepth      = 8      // Avoid overfitting
+cfg.WindowSize    = 20     // Last 20 candles per prediction
+cfg.MinConfidence = 0.65   // Only trade if >65% confident
 
 p := crypto.NewCryptoPredictor(cfg)
 
-// 2. Cargar modelo pre-entrenado al arrancar el bot
+// 2. Load pre-trained model at bot startup
 if err := p.LoadModel("btcusdt_1h_rf.gob"); err != nil {
-    log.Fatalf("Error cargando modelo: %v", err)
+    log.Fatalf("Error loading model: %v", err)
 }
 
-// 3. En el loop de trading — por cada nueva vela:
+// 3. In the trading loop — for each new candle:
 signal, confidence, err := p.PredictSignal(lastCandles) // len == WindowSize
 if err != nil {
-    log.Printf("Predicción fallida: %v", err)
+    log.Printf("Prediction failed: %v", err)
     return
 }
 
 switch signal {
 case crypto.SignalLong:
-    fmt.Printf("LONG con %.1f%% de confianza\n", confidence*100)
+fmt.Printf("LONG with %.1f%% confidence\n", confidence*100)
     // executeOrder(BUY)
 case crypto.SignalShort:
-    fmt.Printf("SHORT con %.1f%% de confianza\n", confidence*100)
+fmt.Printf("SHORT with %.1f%% confidence\n", confidence*100)
     // executeOrder(SELL)
 case crypto.SignalHold:
-    // No operar
+    // Don't trade
 }
 ```
 
-### Señales disponibles
-| Constante | Valor | Significado |
+### Available signals
+| Constant | Value | Meaning |
 |:---|:---|:---|
-| `crypto.SignalHold` | 0 | Sin señal clara — no operar |
-| `crypto.SignalLong` | 1 | El modelo predice subida de precio |
-| `crypto.SignalShort` | 2 | El modelo predice bajada de precio |
+| `crypto.SignalHold` | 0 | No clear signal — don't trade |
+| `crypto.SignalLong` | 1 | Model predicts price rise |
+| `crypto.SignalShort` | 2 | Model predicts price drop |
 
-### Entrenar y guardar un modelo
+### Training and saving a model
 
 ```go
 import "github.com/ateto3/gopherml/crypto"
@@ -114,9 +114,9 @@ cfg.WindowSize = 20
 
 p := crypto.NewCryptoPredictor(cfg)
 
-// candles: serie temporal histórica de OHLCV
-// labels: etiqueta por cada ventana (0=hold, 1=long, 2=short)
-// len(labels) debe ser len(candles) - WindowSize + 1
+// candles: historical OHLCV time series
+// labels: label per window (0=hold, 1=long, 2=short)
+// len(labels) must be len(candles) - WindowSize + 1
 if err := p.Fit(candles, labels); err != nil {
     log.Fatal(err)
 }
@@ -126,34 +126,34 @@ if err := p.SaveModel("btcusdt_1h_rf.gob"); err != nil {
 }
 ```
 
-### Extraer features manualmente
+### Extract features manually
 
 ```go
 cfg := crypto.NewFeatureConfig()
 // cfg.Returns = true, cfg.LogReturns = true, cfg.VWAP = true, ...
 
-// Vector de features para una sola ventana
+// Feature vector for a single window
 fv, err := crypto.ToFeatureVector(windowCandles, cfg)
 
-// Matriz completa por sliding window (para entrenamiento)
+// Complete matrix by sliding window (for training)
 X, err := crypto.BuildFeatureMatrix(allCandles, windowSize, cfg)
 ```
 
-**Features incluidas por defecto:**
-| Feature | Descripción |
+**Features included by default:**
+| Feature | Description |
 |:---|:---|
-| `Returns` | Retornos relativos entre velas consecutivas |
-| `LogReturns` | Log-retornos — más estacionarios |
-| `PriceRange` | `(high-low)/close` por vela — volatilidad normalizada |
-| `VolumeRatio` | `volume/avg_volume` — volumen relativo a la media |
-| `Momentum` | Fracción de velas alcistas en la ventana |
-| `VWAP` | Desviación del cierre respecto al VWAP de la ventana |
+| `Returns` | Relative returns between consecutive candles |
+| `LogReturns` | Log-returns — more stationary |
+| `PriceRange` | `(high-low)/close` per candle — normalized volatility |
+| `VolumeRatio` | `volume/avg_volume` — volume relative to the average |
+| `Momentum` | Fraction of bullish candles in the window |
+| `VWAP` | Closure deviation from window VWAP |
 
 ---
 
-## 4. Modelos Individuales
+## 4. Individual Models
 
-### Random Forest — Clasificador con umbral de confianza
+### Random Forest — Confidence Threshold Classifier
 
 ```go
 import "github.com/ateto3/gopherml/ensemble"
@@ -167,31 +167,31 @@ if err := rf.Fit(X, y); err != nil {
     log.Fatal(err)
 }
 
-// Predicción batch
+// Batch prediction
 predictions, _ := rf.Predict(XTest)
 
-// Probabilidades por clase (para filtrar por confianza)
+// Probabilities per class (to filter by confidence)
 proba, _ := rf.PredictProba(XTest)
-// proba[i][1] = probabilidad de clase 1 para la muestra i
+// test[i][1] = probability of class 1 for sample i
 
-// Predicción de muestra única (hot path en bots)
+// Single sample prediction (hot path in bots)
 label, _ := rf.PredictSingle(featureVector)
 probaSingle, _ := rf.PredictProbaSingle(featureVector)
 ```
 
-### Random Forest — Regresor (predicción de precio)
+### Random Forest — Regressor (Price Prediction)
 
 ```go
 rf := ensemble.NewRandomForestRegressor()
 rf.NEstimators = 100
 
-rf.Fit(X, y) // y = precio futuro
+rf.Fit(X, y) // y = future price
 
-// Predicción de muestra única (sin overhead de batch)
+// Single sample prediction (no batch overhead)
 predictedPrice, _ := rf.PredictSingle(featureVector)
 ```
 
-### Regresión Lineal
+### Linear Regression
 
 ```go
 import "github.com/ateto3/gopherml/linear_model"
@@ -203,77 +203,77 @@ preds, _ := model.Predict(XTest)
 
 ---
 
-## 5. Preprocesamiento
+## 5. Preprocessing
 
-### StandardScaler (recomendado para modelos lineales)
+### StandardScaler (recommended for linear models)
 
 ```go
 import "github.com/ateto3/gopherml/preprocessing"
 
 scaler := preprocessing.NewStandardScaler()
 
-// Opción A: Fit + Transform por separado (train/test split)
-scaler.Fit(XTrain)          // Solo fitear en train
+// Option A: Fit + Transform separately (train/test split)
+scaler.Fit(XTrain)          // Fit only on train
 XTrainScaled, _ := scaler.Transform(XTrain)
-XTestScaled, _  := scaler.Transform(XTest)  // Mismos parámetros
+XTestScaled, _  := scaler.Transform(XTest)  // Same parameters
 
-// Opción B: FitTransform (más conveniente, mismo resultado)
+// Option B: FitTransform (more convenient, same result)
 XScaled, _ := scaler.FitTransform(XTrain)
 
-// Invertir la transformación
+// Reverse the transformation
 XOriginal, _ := scaler.InverseTransform(XScaled)
 ```
 
-> **Atención:** Llamar `Transform` antes de `Fit` devuelve un error explícito — nunca falla silenciosamente.
+> **Attention:** Calling `Transform` before `Fit` returns an explicit error — it never fails silently.
 
 ### MinMaxScaler
 
 ```go
 scaler := preprocessing.NewMinMaxScaler()
-XScaled, _ := scaler.FitTransform(X) // Escala a [0, 1]
+XScaled, _ := scaler.FitTransform(X) // Scales to [0, 1]
 ```
 
 ---
 
-## 6. Persistencia de Modelos
+## 6. Model Persistence
 
 ```go
 import "github.com/ateto3/gopherml/persistence"
 import "github.com/ateto3/gopherml/ensemble"
 
-// Guardar
+// Save
 rf := ensemble.NewRandomForestClassifier()
 rf.Fit(X, y)
-persistence.Save("modelo.gob", rf)
+persistence.Save("model.gob", rf)
 
-// Cargar (con validación automática de integridad)
+// Load (with automatic integrity validation)
 rfLoaded := ensemble.NewRandomForestClassifier()
-if err := persistence.Load("modelo.gob", rfLoaded); err != nil {
-    // El error incluye detección de archivos corruptos o modelos no entrenados
+if err := persistence.Load("model.gob", rfLoaded); err != nil {
+// Error includes detection of corrupt files or untrained models
     log.Fatal(err)
 }
 ```
 
-> Los modelos que implementan la interfaz `persistence.Validator` son validados automáticamente después de cargar. `RandomForestClassifier`, `RandomForestRegressor`, etc. ya implementan esta interfaz.
+> Models implementing the `persistence.Validator` interface are automatically validated after loading. `RandomForestClassifier`, `RandomForestRegressor`, etc. already implement this interface.
 
 ---
 
-## 7. Validación de Datos
+## 7. Data validation
 
 ```go
 import "github.com/ateto3/gopherml/utils"
 
-// Validar matriz 2D y vector objetivo (incluye NaN/Inf check)
+// Validate 2D matrix and target vector (includes NaN/Inf check)
 if err := utils.CheckXy(X, y); err != nil {
     log.Fatal(err)
 }
 
-// Validar solo una matriz
+// Validate only a matrix
 if err := utils.CheckFinite(X); err != nil {
     log.Fatal(err)
 }
 
-// Validar un vector de features individual (hot path)
+// Validate an individual feature vector (hot path)
 if err := utils.CheckFiniteSingle(featureVector); err != nil {
     log.Fatal(err)
 }
@@ -281,7 +281,7 @@ if err := utils.CheckFiniteSingle(featureVector); err != nil {
 
 ---
 
-## 8. Selección de Modelos
+## 8. Model Selection
 
 ```go
 import (
@@ -292,15 +292,15 @@ import (
     "github.com/ateto3/gopherml/model_selection"
 )
 
-// Validación cruzada K-Fold (la API es un struct KFold, no un entero)
+// K-Fold cross-validation (the API is a KFold struct, not an integer)
 kf := model_selection.KFold{NSplits: 5, Shuffle: true, RandomState: 42}
 scores, err := model_selection.CrossValScore(model, X, y, kf)
 if err != nil {
     log.Fatal(err)
 }
-fmt.Println("Scores por fold:", scores)
+fmt.Println("Scores per fold:", scores)
 
-// Grid Search paralelo: una fábrica de modelos + lista de combinaciones
+// parallel grid search: a model factory + list of combinations
 gs := &model_selection.GridSearchCV{
     EstimatorFactory: func(params map[string]interface{}) model_selection.Estimator {
         lr := linear_model.NewLogisticRegression()
@@ -313,29 +313,29 @@ gs := &model_selection.GridSearchCV{
         {"lr": 0.10, "iter": 200},
     },
     CV:    model_selection.KFold{NSplits: 3, Shuffle: true, RandomState: 42},
-    NJobs: -1, // -1 = todos los núcleos
+    NJobs: -1, // -1 = all cores
 }
 if err := gs.Fit(X, y); err != nil {
     log.Fatal(err)
 }
-fmt.Printf("Mejores parámetros: %v (score: %.4f)\n", gs.BestParams, gs.BestScore)
+fmt.Printf("Best parameters: %v (score: %.4f)\n", gs.BestParams, gs.BestScore)
 ```
 
-> **Nota:** `CrossValScore` y `GridSearchCV` requieren modelos con `Fit(X, y)` y `Score(X, y)` (interfaz `Estimator`). Los árboles individuales de `tree/` usan `Fit(X, y, sampleWeight)`, así que usa los bosques de `ensemble/`.
+> **Note:** `CrossValScore` and `GridSearchCV` require models with `Fit(X, y)` and `Score(X, y)` (`Estimator` interface). Individual `tree/` trees use `Fit(X, y, sampleWeight)`, so use `ensemble/` forests.
 
 ---
 
-## 9. Buenas Prácticas para Bots en Producción
+## 9. Best Practices for Bots in Production
 
-| Práctica | Motivo |
+| Practice | Reason |
 |:---|:---|
-| Usar `PredictSingle` en loops de alta frecuencia | Evita allocations innecesarias por tick |
-| Cargar el modelo al arrancar, no en cada predicción | `Load` es costoso — hacerlo una vez |
-| Usar `MinConfidence >= 0.60` | Reduce señales falsas en mercados laterales |
-| Validar candles antes de predecir | Exchanges pueden enviar velas con gaps o volumen 0 |
-| Guardar el scaler junto al modelo | El `CryptoPredictor` lo hace automáticamente via `SaveModel` |
-| Usar `go test ./... -race` antes de desplegar | Detecta race conditions en predicción concurrente |
+| Use `PredictSingle` on high-frequency loops | Avoid unnecessary allocations per tick |
+| Load the model at startup, not on every prediction | `Load` is expensive — do it once |
+| Use `MinConfidence >= 0.60` | Reduce false signals in sideways markets |
+| Validate candles before predicting | Exchanges can send candles with gaps or volume 0 |
+| Save the scaler next to the model | The `CryptoPredictor` does it automatically via `SaveModel` |
+| Use `go test ./... -race` before deploying | Detects race conditions in concurrent prediction |
 
 ---
 
-*GopherML — Machine Learning nativo en Go para bots de criptomonedas.*
+*GopherML — Go Native Machine Learning for Cryptocurrency Bots.*

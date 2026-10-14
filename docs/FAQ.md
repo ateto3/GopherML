@@ -1,100 +1,100 @@
-# ❓ Preguntas frecuentes (FAQ)
+Frequently Answered Questions (FAQs)
 
-## Errores y validación
+## Errors and Validation
 
-### `Fit`/`Predict` me devuelve `NaN` o `Inf` — ¿por qué?
+### `Fit`/`Predict` returns` NaN `or` Inf `— why?
 
-GopherML rechaza explícitamente los valores no finitos en la entrada. El error indica la posición del problema. Solución típica: revisar el cálculo de features (divisiones por cero, `log(0)`) o limpiar el CSV antes de entrenar. Nunca "parchees" con `math.IsNaN` fuera: la validación es intencionada.
+GopherML explicitly rejects non-finite values in the input. The error indicates the position of the problem. Typical solution: review the calculation of features (divisions by zero, `log(0)`) or clean the CSV before training. Never 'patch' with `math.IsNaN` out: validation is intentional.
 
-### Me dice `dimension mismatch` — ¿qué compruebo?
+### He tells me `dimension mismatch` — what do I check?
 
-`len(X)` (muestras) debe coincidir con `len(y)`, y **todas las filas** de `X` deben tener el mismo número de columnas. Para predicción, el número de columnas debe ser el mismo que en entrenamiento.
+`len(X)` (samples) must match `len(y)`, and **all rows** of `X` must have the same number of columns. For prediction, the number of columns must be the same as in training.
 
-### `Transform` devuelve un error antes de `Fit`
+### `Transform` returns error before `Fit`
 
-Correcto: los scalers necesitan conocer media/desviación (o min/max) con `Fit` (o `FitTransform`) antes de transformar. Nunca falla en silencio.
+Correct: Scalers need to know mean/deviation (or min/max) with `Fit` (or `FitTransform`) before transforming. It never fails in silence.
 
 ### `model not fitted` / `tree is not fitted yet`
 
-Estás llamando a `Predict` antes de `Fit`, o cargaste un modelo incompleto. En `persistence.Load`, los modelos con la interfaz `Validator` detectan esto automáticamente.
+You are calling `Predict` before `Fit`, or you uploaded an incomplete model. In `persistence.Load`, models with the `Validator` interface detect this automatically.
 
 ---
 
-## API y uso
+## API and usage
 
-### ¿Cuál es la diferencia entre `Predict` y `PredictSingle`?
+### What is the difference between `Predict` and `PredictSingle`?
 
-`Predict` procesa un lote (`[][]float64`) y reserva memoria para el resultado; `PredictSingle` procesa una muestra con el mínimo de allocations — úsala en bucles de trading (ver [PERFORMANCE.md](PERFORMANCE.md)).
+`Predict` processes a batch (`[][]float64`) and reserves memory for the result; `PredictSingle` processes a sample with the minimum of allocations — use it in trading loops (see [PERFORMANCE.md](PERFORMANCE.md)).
 
-### ¿Por qué `tree.DecisionTreeClassifier.Fit(X, y, sampleWeight)` tiene 3 argumentos?
+### Why does` tree.DecisionTreeClassifier.Fit (X, y, sampleWeight) `have 3 arguments?
 
-Los árboles de bajo nivel soportan pesos por muestra. Por eso **no** implementan la interfaz `Estimator` de `model_selection`; para validación cruzada usa `ensemble.RandomForest*`, cuya firma es `Fit(X, y)`.
+Low-level trees support weights per sample. That's why they * * don't * * implement the `Estimator` interface of `model_selection`; for cross-validation use `ensemble.RandomForest *`, whose signature is` Fit(X, y) `.
 
-### ¿Cómo obtengo probabilidades para filtrar por confianza?
+### How do I get probabilities to filter by trust?
 
 ```go
 proba, _ := rf.PredictProbaSingle(featureVector)
 if proba[1] >= 0.65 { /* confianza suficiente */ }
 ```
 
-En `crypto`, este filtro ya está embebido: `PredictSignal` devuelve `SignalHold` si la confianza no supera `MinConfidence`.
+In `crypto`, this filter is already embedded: `PredictSignal` returns `SignalHold` if confidence doesn't exceed `MinConfidence`.
 
-### ¿Cómo hago que los resultados sean reproducibles?
+### How do I make results reproducible?
 
-Fija `RandomState` (y `Shuffle: true` en `KFold`). GopherML usa RNG con semilla (`utils.NewRNG`) en lugar del estado global de `math/rand`.
+Set `RandomState` (and `Shuffle: true` in `KFold`). GopherML uses seeded RNG (`utils.NewRNG`) instead of `math/rand` global state.
 
-### ¿Qué devuelve `Score`?
+### What does `Score` return?
 
-Accuracy para clasificadores y R² para regresores (equivalente a scikit-learn).
-
----
-
-## Persistencia
-
-### ¿Los `.gob` son compatibles entre versiones?
-
-`gob` serializa la estructura concreta del struct: si cambias la versión de GopherML y cambian campos internos de un modelo, reentrena o guarda también la versión. En producción, versiona los archivos de modelo junto al binario.
-
-### ¿Se puede guardar un modelo sin entrenar?
-
-Sí se serializaría, pero `Load` fallará si el modelo implementa `Validator` (que comprueba `IsFitted`). Esa es la protección de integridad.
-
-### ¿El scaler se guarda con el modelo?
-
-Con `CryptoPredictor.SaveModel`, sí (modelo + scaler juntos). Para modelos sueltos, guarda tú el scaler aparte o fitea `StandardScaler` con los mismos datos de entrenamiento.
+Accuracy for classifiers and R² for regressors (equivalent to scikit-learn).
 
 ---
 
-## Rendimiento
+## Persistence
 
-### ¿Debo usar las versiones paralelas?
+### Are `.gob` files compatible between versions?
 
-Solo si el dataset es grande (>10 000 muestras o >50 features). Para datasets pequeños, las goroutines añaden overhead. Ver [PERFORMANCE.md](PERFORMANCE.md).
+`gob` serializes the concrete struct structure: if you change the GopherML version and model internal fields change, retrain or save the version as well. In production, version model files together with the binary.
 
-### ¿GopherML usa Cgo o GPU?
+### Can I save an untrained model?
 
-No. Solo librería estándar de Go: binarios estáticos, multiplataforma, fáciles de desplegar en Raspberry Pi (ARM64) o servidores x86_64.
+Yes it would serialize, but `Load` will fail if the model implements `Validator` (which checks `IsFitted`). That's the integrity protection.
 
-### ¿Por qué no usar TensorFlow/GoML directamente?
+### Is the scaler saved with the model?
 
-GopherML cubre los algoritmos clásicos (árboles, bosques, lineales, logística) con API de scikit-learn y cero dependencias. Si necesitas deep learning, este no es el proyecto adecuado.
+With `CryptoPredictor.SaveModel`, yes (model + scaler together). For standalone models, save the scaler separately or fit `StandardScaler` with the same training data.
 
 ---
 
-## El proyecto
+## Performance
 
-### ¿Qué es `go-nlp/`?
+### Should I use parallel versions?
 
-Un módulo **independiente** (su propio `go.mod`) dentro del repositorio: un puerto concurrente de NLTK (tokenización, POS tagging, parsing, sentimiento) con optimización de tokens para LLMs. Se compila y testea por separado: `cd go-nlp && go build ./...`. Ver [go-nlp/README.md](../go-nlp/README.md).
+Only if the dataset is large (>10,000 samples or >50 features). For small datasets, goroutines add overhead. See [PERFORMANCE.md](PERFORMANCE.md).
 
-### ¿Puedo usar GopherML en un bot comercial?
+### Does GopherML use Cgo or GPU?
 
-Sí: licencia MIT ([LICENSE](../LICENSE)). Sin garantías — valida siempre las señales en un entorno de paper-trading antes de arriesgar capital.
+No. Only Go standard library: static binaries, cross-platform, easy to deploy on Raspberry Pi (ARM64) or x86_64 servers.
 
-### ¿Cómo reporto un bug o propongo una función?
+### Why not use TensorFlow/GoML directly?
 
-Usa las [plantillas de issues](https://github.com/ateto3/gopherml/issues/new/choose). Vulnerabilidades: ver [SECURITY.md](../SECURITY.md).
+GopherML covers classical algorithms (trees, forests, linear, logistic) with scikit-learn API and zero dependencies. If you need deep learning, this is not the right project.
 
-### ¿Dónde empiezo como contribuidor?
+---
 
-[CONTRIBUTING.md](../CONTRIBUTING.md) — incluye los comandos de verificación (`go vet`, `go test -race`) y las directrices de rendimiento.
+## The project
+
+### What is `go-nlp/`?
+
+An **independent** module (its own `go.mod`) within the repository: a concurrent NLTK port (tokenization, POS tagging, parsing, sentiment) with token optimization for LLMs. It compiles and tests separately: `cd go-nlp && go build ./...`. See [go-nlp/README.md](../go-nlp/README.md).
+
+### Can I use GopherML in a commercial bot?
+
+Yes: MIT license ([LICENSE](../LICENSE)). No warranties — always validate signals in a paper-trading environment before risking capital.
+
+### How do I report a bug or propose a feature?
+
+Use the [issue templates](https://github.com/ateto3/gopherml/issues/new/choose). Vulnerabilities: see [SECURITY.md](../SECURITY.md).
+
+### Where do I start as a contributor?
+
+[CONTRIBUTING.md](../CONTRIBUTING.md) — includes verification commands (`go vet`, `go test -race`) and performance guidelines.

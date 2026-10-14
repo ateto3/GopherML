@@ -1,97 +1,98 @@
-# Optimizaciones de Rendimiento en LinearModel
+# Performance Optimizations in LinearModel
 
-Este documento describe las optimizaciones específicas de Go implementadas en el paquete `linear_model`.
+This document describes the Go-specific optimizations implemented in the `linear_model` package.
 
-## 🚀 Características de Alto Rendimiento
+## 🚀 High-Performance Features
 
-### 1. Goroutines y Paralelismo Nativo
+### 1. Goroutines and Native Parallelism
 
-Todas las operaciones intensivas computacionalmente utilizan goroutines:
+All computationally intensive operations use goroutines:
 
 ```go
-// Ejemplo: ParallelFor divide trabajo entre CPUs
+// Example: ParallelFor splits work across CPUs
 ParallelFor(nSamples, opts, func(start, end int) {
     for i := start; i < end; i++ {
-        // Procesar batch
+        // Process batch
     }
 })
 ```
 
-**Uso de `sync.WaitGroup`** para sincronización eficiente sin bloqueos innecesarios.
+**`sync.WaitGroup` usage** for efficient synchronization without unnecessary locking.
 
-### 2. Memory Pools y Reutilización de Buffers
+### 2. Memory Pools and Buffer Reuse
 
 ```go
-// Pre-alocación de memoria contigua para mejor localidad de caché
+// Pre-allocation of contiguous memory for better cache locality
 dataBlock := make([]float64, nSamples*nFeatures)
 for i := range X {
     XWork[i] = dataBlock[i*nFeatures : (i+1)*nFeatures]
 }
 ```
 
-**Ventaja**: Una sola allocación vs nSamples allocaciones separadas.
+**Advantage**: A single allocation vs nSamples separate allocations.
 
-### 3. Punteros y Slice Headers
+### 3. Pointers and Slice Headers
 
-Uso extensivo de punteros para evitar copias:
+Extensive use of pointers to avoid copies:
 ```go
-xi := X[i]  // Puntero a fila, evita bounds checks en inner loops
+xi := X[i]  // Pointer to row, avoids bounds checks in inner loops
 for j := 0; j < nFeatures; j++ {
-    sum += xi[j] * xi[k]  // Acceso directo por puntero
+    sum += xi[j] * xi[k]  // Direct access via pointer
 }
 ```
 
-### 4. Canales para Agregación
+### 4. Channels for Aggregation
 
-Los workers envían resultados parciales vía canales:
-```go	type partialSum struct {
-		idx  int
-		val  float64
-	}
-	results := make(chan partialSum, nFeatures)
-	// Workers calculan y envían
-	results <- partialSum{idx: j, val: sum}
+Workers send partial results via channels:
+```go
+type partialSum struct {
+    idx int
+    val float64
+}
+results := make(chan partialSum, nFeatures)
+// Workers compute and send
+results <- partialSum{idx: j, val: sum}
 ```
 
-### 5. Loop Unrolling Manual
+### 5. Manual Loop Unrolling
 
-Para operaciones críticas:
+For critical operations:
 ```go
-// Unroll x4 para mejor pipelining de CPU
+// Unroll x4 for better CPU pipelining
 for ; j <= nFeatures-4; j += 4 {
     sum += row[j]*v[j] + row[j+1]*v[j+1] + 
            row[j+2]*v[j+2] + row[j+3]*v[j+3]
 }
 ```
 
-## 📊 Resultados de Benchmarks
+## 📊 Benchmark Results
 
-| Dataset | Secuencial | Paralelo | Speedup |
+| Dataset | Sequential | Parallel | Speedup |
 |---------|-----------|----------|---------|
 | 50K×200 (Large) | 46.0s | 1.8s | **25x** |
 | 5K×50 Lasso | 91ms | 17ms | **5.3x** |
-| 10K predicción | 2.4ms | 1.2ms | **2x** |
+| 10K prediction | 2.4ms | 1.2ms | **2x** |
 
-## 🎯 Modelos Paralelos Disponibles
+## 🎯 Available Parallel Models
 
-1. **`LinearRegressionParallel`** - Multiplicación de matrices paralela
-2. **`LassoParallel`** - Coordinate descent con actualizaciones paralelas
-3. **`WorkerPool`** reutilizable para procesamiento por lotes
+1. **`LinearRegressionParallel`** - Parallel matrix multiplication
+2. **`LassoParallel`** - Coordinate descent with parallel updates
+3. **`WorkerPool`** reusable for batch processing
 
-## 🔧 Uso Recomendado
+## 🔧 Recommended Usage
 
-### Cuándo usar versiones paralelas:
+### When to use parallel versions:
 - Dataset > 10,000 samples
 - Features > 50
-- Predicciones en batch grandes
+- Large batch predictions
 
-### Cuándo usar versiones secuenciales:
-- Dataset < 1,000 samples (overhead de goroutines no compensa)
-- Sistemas single-core
-- Aplicaciones en tiempo real de baja latencia
+### When to use sequential versions:
+- Dataset < 1,000 samples (goroutine overhead does not pay off)
+- Single-core systems
+- Low-latency real-time applications
 
 ```go
-// Ejemplo de uso
+// Usage example
 opts := linear_model.ParallelOptions{
     NumWorkers:   runtime.NumCPU(),
     MinBatchSize: 1000,
@@ -104,19 +105,19 @@ model := linear_model.NewLinearRegressionParallelWithParams(
 model.Fit(X, y)
 ```
 
-## 💡 Optimizaciones Específicas de Go
+## 💡 Go-Specific Optimizations
 
-| Técnica | Beneficio |
-|---------|-----------|
-| Goroutines livianas | ~2KB stack vs ~1MB thread |
-| Slices contiguas | Mejor localidad de caché |
-| `sync.Pool` | Reutilización de objetos GC |
-| Channels buffered | Reduce contención |
-| Mutex selectivo | Solo donde es necesario |
+| Technique | Benefit |
+|-----------|---------|
+| Lightweight goroutines | ~2KB stack vs ~1MB thread |
+| Contiguous slices | Better cache locality |
+| `sync.Pool` | GC object reuse |
+| Buffered channels | Reduced contention |
+| Selective mutex | Only where needed |
 
 ## 🚫 Zero Dependencies
 
-El paquete utiliza **exclusivamente** la librería estándar de Go:
+The package uses the Go standard library **exclusively**:
 - `runtime` - NumCPU()
 - `sync` - WaitGroup, Mutex, Pool
-- No cgo, no numpy, no dependencias externas
+- No cgo, no numpy, no external dependencies

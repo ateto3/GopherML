@@ -1,48 +1,48 @@
-# 📖 Referencia de API de GopherML
+# 📖 GopherML API Reference
 
-Referencia de los tipos y funciones exportados de cada paquete, generada a partir del código fuente (Go 1.23, módulo `github.com/ateto3/gopherml`).
+Reference of the exported types and functions of each package, generated from the source code (Go 1.23, module `github.com/ateto3/gopherml`).
 
-> **Convención de la API estándar de modelos:**
+> **Standard model API convention:**
 >
 > ```
-> NewModel()          → inicializar con parámetros por defecto
-> Fit(X, y)           → entrenar (valida NaN/Inf y dimensiones)
-> Predict(X)          → predicción batch
-> PredictSingle(x)    → predicción de una muestra (hot path)
-> PredictProba(X)     → probabilidades por clase
-> Score(X, y)         → evaluar (R² en regresión, accuracy en clasificación)
+> NewModel()          → initialize with default parameters
+> Fit(X, y)           → train (validates NaN/Inf and dimensions)
+> Predict(X)          → batch prediction
+> PredictSingle(x)    → single sample prediction (hot path)
+> PredictProba(X)     → class probabilities
+> Score(X, y)         → evaluate (R² for regression, accuracy for classification)
 > ```
 >
-> `X` es `[][]float64` (`[nMuestras][nFeatures]`), `y` es `[]float64`. Nunca ignores los errores.
+> `X` is `[][]float64` (`[nSamples][nFeatures]`), `y` is `[]float64`. Never ignore errors.
 
 ---
 
-## `utils` — Validación y utilidades de datos
+## `utils` — Data validation and utilities
 
-Toda entrada de datos debe pasar por aquí (los modelos lo hacen internamente).
+All data input must pass through here (models do this internally).
 
-| Función | Firma | Descripción |
+| Function | Signature | Description |
 | :--- | :--- | :--- |
-| `CheckArray` | `(X [][]float64) error` | Valida que la matriz no esté vacía y tenga filas homogéneas |
-| `CheckFinite` | `(X [][]float64) error` | Rechaza `NaN`/`Inf` en toda la matriz |
-| `CheckFiniteSingle` | `(x []float64) error` | Ídem para un vector (hot path, más rápido) |
-| `CheckFiniteVec` | `(y []float64) error` | Ídem para el vector objetivo |
-| `CheckXy` | `(X [][]float64, y []float64) error` | Valida matriz + vector: dimensiones y finite |
-| `CheckIsFitted` | `(fitted bool, modelName string) error` | Devuelve error si el modelo no está entrenado |
-| `TrainTestSplit` | `(X, y, testSize float64, randomState int64) (XTrain, XTest, yTrain, yTest [][]float64/[]float64, error)` | División train/test; `testSize ∈ (0,1)` |
-| `LoadCSV` | `(path string, hasHeader bool) (X [][]float64, y []float64, error)` | Carga CSV: última columna = target |
-| `NewRNG` | `(seed int64) *rand.Rand` | RNG determinista para tests reproducibles |
-| `Shuffle` | `(n int, rng *rand.Rand) []int` | Permutación determinista |
+| `CheckArray` | `(X [][]float64) error` | Validates that the matrix is not empty and has homogeneous rows |
+| `CheckFinite` | `(X [][]float64) error` | Rejects `NaN`/`Inf` in the entire matrix |
+| `CheckFiniteSingle` | `(x []float64) error` | Same for a vector (hot path, faster) |
+| `CheckFiniteVec` | `(y []float64) error` | Same for the target vector |
+| `CheckXy` | `(X [][]float64, y []float64) error` | Validates matrix + vector: dimensions and finite |
+| `CheckIsFitted` | `(fitted bool, modelName string) error` | Returns error if the model is not trained |
+| `TrainTestSplit` | `(X, y, testSize float64, randomState int64) (XTrain, XTest, yTrain, yTest [][]float64/[]float64, error)` | Train/test split; `testSize ∈ (0,1)` |
+| `LoadCSV` | `(path string, hasHeader bool) (X [][]float64, y []float64, error)` | Loads CSV: last column = target |
+| `NewRNG` | `(seed int64) *rand.Rand` | Deterministic RNG for reproducible tests |
+| `Shuffle` | `(n int, rng *rand.Rand) []int` | Deterministic permutation |
 
 ---
 
-## `preprocessing` — Escalado y codificación
+## `preprocessing` — Scaling and encoding
 
-Todos siguen el patrón `Fit` → `Transform` (o `FitTransform`). `Transform` antes de `Fit` devuelve error.
+They all follow the `Fit` → `Transform` (or `FitTransform`) pattern. `Transform` before `Fit` returns error.
 
 ### `StandardScaler`
 
-Estandariza restando la media y dividiendo por la desviación típica (equivalente a `sklearn.preprocessing.StandardScaler`).
+Standardize by subtracting the mean and dividing by the standard deviation (equivalent to `sklearn.preprocessing.StandardScaler`).
 
 ```go
 s := preprocessing.NewStandardScaler()   // *StandardScaler{Mean, Std, IsFitted}
@@ -54,11 +54,11 @@ s.InverseTransform(X) ([][]float64, error)
 
 ### `MinMaxScaler`
 
-Escala cada feature al rango `[0, 1]` (`Min`, `Max`, `IsFitted`). Mismos métodos que `StandardScaler`.
+Scales each feature to the range `[0, 1]` (`Min`, `Max`, `IsFitted`). Same methods as `StandardScaler`.
 
 ### `LabelEncoder`
 
-Codifica etiquetas de texto a enteros `0..n-1`:
+Encodes text labels to integers `0..n-1`:
 
 ```go
 le := preprocessing.NewLabelEncoder()    // *LabelEncoder{Classes []string, Mapping map[string]int}
@@ -69,7 +69,7 @@ le.InverseTransform(y []float64) ([]string, error)
 
 ### `PolynomialFeatures`
 
-Genera features polinómicas y de interacción **hasta grado 2** (mayor grado devuelve error):
+Generates polynomial and interaction features **up to degree 2** (higher degree returns error):
 
 ```go
 pf := preprocessing.NewPolynomialFeatures(2)  // *PolynomialFeatures{Degree, IncludeBias}
@@ -80,96 +80,96 @@ pf.Transform(X) ([][]float64, error)
 
 ---
 
-## `metrics` — Evaluación
+## `metrics` — Evaluation
 
-Todas las funciones comparan `yTrue` vs `yPred` (ambos `[]float64`) y devuelven `(float64, error)` salvo indicación.
+All functions compare `yTrue` vs `yPred` (both `[]float64`) and return `(float64, error)` unless otherwise indicated.
 
-### Clasificación
+### CLASSIFICATION
 
-| Función | Firma | Notas |
+| Function | Signature | Notes |
 | :--- | :--- | :--- |
-| `AccuracyScore` | `(yTrue, yPred []float64) (float64, error)` | Fracción de aciertos |
-| `PrecisionScore` | `(yTrue, yPred []float64, average string) (float64, error)` | `average`: `"macro"`, `"weighted"` o `""` (binario) |
-| `RecallScore` | `(yTrue, yPred []float64, average string) (float64, error)` | Ídem |
-| `F1Score` | `(yTrue, yPred []float64, average string) (float64, error)` | Ídem |
-| `ROCAUCScore` | `(yTrue, yScores []float64) (float64, error)` | `yScores` = probabilidades de la clase positiva |
-| `ConfusionMatrix` | `(yTrue, yPred []float64) ([][]int, []float64, error)` | Matriz de confusión + clases |
-| `ClassificationReport` | `(yTrue, yPred []float64) (string, error)` | Informe por clase estilo sklearn |
+| `AccuracyScore` | `(yTrue, yPred []float64) (float64, error)` | Fraction of correct predictions |
+| `PrecisionScore` | `(yTrue, yPred []float64, average string) (float64, error)` | `average`: `"macro"`, `"weighted"` or `""` (binary) |
+| `RecallScore` | `(yTrue, yPred []float64, average string) (float64, error)` | Same |
+| `F1Score` | `(yTrue, yPred []float64, average string) (float64, error)` | Same |
+| `ROCAUCScore` | `(yTrue, yScores []float64) (float64, error)` | `yScores` = positive class probabilities |
+| `ConfusionMatrix` | `(yTrue, yPred []float64) ([][]int, []float64, error)` | Confusion matrix + classes |
+| `ClassificationReport` | `(yTrue, yPred []float64) (string, error)` | Per-class sklearn-style report |
 
-### Regresión
+### REGRESSION
 
-| Función | Firma |
+| Function | Signature |
 | :--- | :--- |
 | `MeanSquaredError` | `(yTrue, yPred []float64) (float64, error)` |
 | `RootMeanSquaredError` | `(yTrue, yPred []float64) (float64, error)` |
 | `MeanAbsoluteError` | `(yTrue, yPred []float64) (float64, error)` |
 | `R2Score` | `(yTrue, yPred []float64) (float64, error)` |
 
-> Los modelos también incluyen su propio `Score(X, y)`: **accuracy** para clasificadores, **R²** para regresores.
+> Models also include their own `Score(X, y)`: **accuracy** for classifiers, **R²** for regressors.
 
 ---
 
-## `linear_model` — Regresión y clasificación lineal
+## `linear_model` — Linear regression and classification
 
-### Errores sentinela
+### Sentinel Errors
 
 ```go
-linear_model.ErrEmptyData         // entrada vacía
-linear_model.ErrDimensionMismatch // dimensiones incompatibles
-linear_model.ErrNotFitted         // Predict antes de Fit
+linear_model.ErrEmptyData         // empty input
+linear_model.ErrDimensionMismatch // incompatible dimensions
+linear_model.ErrNotFitted         // Predict before Fit
 ```
 
-### Modelos
+Models
 
-| Modelo | Constructor | Métodos | Hiperparámetros destacados |
+| Model | Constructor | Methods | Key Hyperparameters |
 | :--- | :--- | :--- | :--- |
 | `LinearRegression` (OLS) | `NewLinearRegression()`, `NewLinearRegressionWithParams(LinearRegressionParams)` | `Fit`, `Predict`, `Score` | `FitIntercept`, `CopyX` |
 | `Ridge` (L2) | `NewRidge()`, `NewRidgeWithParams(RidgeParams)` | `Fit`, `Predict`, `Score` | `Alpha`, `Solver`, `MaxIter`, `Tol` |
 | `Lasso` (L1) | `NewLasso()`, `NewLassoWithParams(LassoParams)` | `Fit`, `Predict`, `Score` | `Alpha`, `MaxIter`, `Tol`, `Positive` |
 | `ElasticNet` (L1+L2) | `NewElasticNet()`, `NewElasticNetWithParams(ElasticNetParams)` | `Fit`, `Predict`, `Score` | `Alpha`, `L1Ratio`, `MaxIter`, `Tol` |
-| `LogisticRegression` | `NewLogisticRegression()` | `Fit`, `Predict`, `PredictProba`, `Score` | `LearningRate`, `MaxIter`, `Tol` (binaria) |
+| `LogisticRegression` | `NewLogisticRegression()` | `Fit`, `Predict`, `PredictProba`, `Score` | `LearningRate`, `MaxIter`, `Tol` (binary) |
 | `SGDClassifier` | `NewSGDClassifier()` | `Fit`, `Predict` | `LearningRate`, `MaxIter`, `Tol`, `RandomState` |
 
-`LinearRegression`, `Ridge`, `Lasso` y `ElasticNet` embeben `LinearModel`:
+`LinearRegression`, `Ridge`, `Lasso`, and `ElasticNet` embed `LinearModel`:
 
 ```go
 type LinearModel struct {
-    Coef         []float64 // coeficientes
-    Intercept    float64   // sesgo
+    Coef         []float64 // coefficients
+    Intercept    float64   // bias
     FitIntercept bool
     NFeaturesIn  int
     IsFitted     bool
 }
-// métodos: Predict(X) ([]float64, error), Score(X, y) (float64, error)
+// methods: Predict(X) ([]float64, error), Score(X, y) (float64, error)
 ```
 
-### Versiones paralelas y utilidades
+### Parallel versions and utilities
 
-| Símbolo | Firma / descripción |
+| Symbol | Signature / description |
 | :--- | :--- |
-| `ParallelOptions` | `{NumWorkers, MinBatchSize int}` — `DefaultParallelOptions()` usa todos los núcleos |
-| `ParallelFor` | `(n int, opts ParallelOptions, fn func(start, end int))` — paraleliza un rango |
+| `ParallelOptions` | `{NumWorkers, MinBatchSize int}` — `DefaultParallelOptions()` uses all cores |
+| `ParallelFor` | `(n int, opts ParallelOptions, fn func(start, end int))` — parallelizes a range |
 | `ParallelMatrixMultiply` | `(X [][]float64, opts) [][]float64` |
 | `ParallelMatVecMul` | `(X [][]float64, v []float64, opts) []float64` |
-| `ParallelCenterData` | centra datos en paralelo, devuelve offsets |
-| `LinearRegressionParallel` | `NewLinearRegressionParallel()` — OLS paralelo |
+| `ParallelCenterData` | centers data in parallel, returns offsets |
+| `LinearRegressionParallel` | `NewLinearRegressionParallel()` — parallel OLS |
 | `LassoParallel` | `NewLassoParallel()`, `NewLassoParallelWithParams(LassoParams, ParallelOptions)` |
-| `WorkerPool` | `NewWorkerPool(workers int)` reutilizable para lotes |
-| `DotProduct`, `Mean`, `Transpose`, `MeanSquaredError` | utilidades matemáticas |
+| `WorkerPool` | `NewWorkerPool(workers int)` reusable for batches |
+| `DotProduct`, `Mean`, `Transpose`, `MeanSquaredError` | mathematical utilities |
 
-Guía de cuándo paralelizar en [PERFORMANCE.md](PERFORMANCE.md) y [../linear_model/PERFORMANCE.md](../linear_model/PERFORMANCE.md).
+Guide to when to parallelize in [PERFORMANCE.md](PERFORMANCE.md) and [../linear_model/PERFORMANCE.md](../linear_model/PERFORMANCE.md).
 
 ---
 
-## `tree` — Árboles de decisión CART
+## `tree` — CART decision trees
 
-> ⚠️ **Atención:** `Fit` de los árboles recibe un tercer argumento `sampleWeight` (usa `nil` si no hay pesos). Por eso **no** implementan directamente la interfaz `Estimator` de `model_selection`; usa los bosques de `ensemble` para validación cruzada.
+> ⚠️ **Attention:** `Fit` of the trees receives a third argument `sampleWeight` (use `nil` if there are no weights). That's why they **don't** directly implement the `Estimator` interface of `model_selection`; use the `ensemble` forests for cross-validation.
 
 ### `DecisionTreeClassifier`
 
 ```go
 dt := tree.NewDecisionTreeClassifier()
-// o con parámetros explícitos:
+// or with explicit parameters:
 dt := tree.NewDecisionTreeClassifierWithParams(tree.DecisionTreeClassifierParams{ /* ... */ })
 
 dt.Fit(X [][]float64, y []float64, sampleWeight []float64) error
@@ -182,26 +182,26 @@ dt.GetNLeaves() int
 
 ### `DecisionTreeRegressor`
 
-Mismos métodos, pero `Predict` devuelve `([]float64, error)` y el criterio por defecto es `MSE`.
+Same methods, but `Predict` returns `([]float64, error)` and the default criterion is `MSE`.
 
-### Parámetros comunes (campos del struct)
+### Common parameters (struct fields)
 
-| Campo | Tipo | Descripción |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `Criterion` | `string` | `"gini"`, `"entropy"` (clasif.) o `"mse"` (regres.) |
-| `Splitter` | `string` | Estrategia de búsqueda de split |
-| `MaxDepth` | `int` | Profundidad máxima (`0` = sin límite) |
-| `MinSamplesSplit` | `int` | Mínimo de muestras para dividir un nodo |
-| `MinSamplesLeaf` | `int` | Mínimo de muestras por hoja |
-| `MaxFeatures` | `interface{}` | `int`, `float64` o `"sqrt"`/`"log2"` |
-| `RandomState` | `int` | Semilla de reproducibilidad |
-| `CCPAlpha` | `float64` | Poda de coste-complejidad |
+| `Criterion` | `string` | `"gini"`, `"entropy"` (classif.) or `"mse"` (regress.) |
+| `Splitter` | `string` | Split search strategy |
+| `MaxDepth` | `int` | Maximum depth (`0` = unlimited) |
+| `MinSamplesSplit` | `int` | Minimum samples to split a node |
+| `MinSamplesLeaf` | `int` | Minimum samples per leaf |
+| `MaxFeatures` | `interface{}` | `int`, `float64` or `"sqrt"`/`"log2"` |
+| `RandomState` | `int` | Reproducibility seed |
+| `CCPAlpha` | `float64` | Cost-complexity pruning |
 
-Atributos ajustados tras `Fit`: `Tree`, `NFeatures`, `NOutputs`, `NClasses`, `Classes`, `IsFitted`.
+Fitted attributes after `Fit`: `Tree`, `NFeatures`, `NOutputs`, `NClasses`, `Classes`, `IsFitted`.
 
-### Componentes extensibles
+### Extensible components
 
-`Criterion` (`Gini`, `Entropy`, `MSE`), `Splitter` (`BestSplitter`, `RandomSplitter`), `TreeBuilder` (`DepthFirstTreeBuilder`) y `BuildTree(...)` para construir árboles a bajo nivel. `PrintTree(t, featureNames)` imprime el árbol.
+`Criterion` (`Gini`, `Entropy`, `MSE`), `Splitter` (`BestSplitter`, `RandomSplitter`), `TreeBuilder` (`DepthFirstTreeBuilder`) and `BuildTree(...)` to build low-level trees. `PrintTree(t, featureNames)` prints the tree.
 
 ---
 
@@ -218,7 +218,7 @@ rf.PredictProba(X) ([][]float64, error)
 rf.PredictSingle(x []float64) (int, error)          // hot path
 rf.PredictProbaSingle(x []float64) ([]float64, error) // hot path
 rf.Score(X, y) (float64, error)                       // accuracy
-rf.ValidateLoaded() error                             // llamado por persistence.Load
+rf.ValidateLoaded() error                             // called by persistence.Load
 ```
 
 ### `RandomForestRegressor`
@@ -233,25 +233,25 @@ rf.Score(X, y) (float64, error)  // R²
 rf.ValidateLoaded() error
 ```
 
-### Hiperparámetros (embebidos de `BaseForest`)
+### Hyperparameters (embedded from `BaseForest`)
 
-| Campo | Tipo | Descripción |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `NEstimators` | `int` | Número de árboles (entrenados en paralelo) |
-| `MaxDepth` | `int` | Profundidad máxima por árbol |
-| `MinSamplesSplit` / `MinSamplesLeaf` | `int` | Restricciones de tamaño de nodo/hoja |
-| `MaxFeatures` | `interface{}` | Features consideradas por split |
-| `Bootstrap` | `bool` | Muestreo con reemplazo por árbol |
-| `RandomState` | `int64` | Semilla (reproducibilidad) |
-| `IsFitted` | `bool` | Estado tras entrenar |
+| `NEstimators` | `int` | Number of trees (trained in parallel) |
+| `MaxDepth` | `int` | Maximum depth per tree |
+| `MinSamplesSplit` / `MinSamplesLeaf` | `int` | Node/Leaf size restrictions |
+| `MaxFeatures` | `interface{}` | Features considered by split |
+| `Bootstrap` | `bool` | Sampling with replacement |
+| `RandomState` | `int64` | Seed (reproducibility) |
+| `IsFitted` | `bool` | Status after training |
 
-Atributos: `Classes []int`, `NClasses int`, `Estimators []…`.
+Attributes: `Classes []int`, `NClasses int`, `Estimators []…`.
 
-Utilidades: `ForestParams` / `DefaultForestParams()`, `GenerateBootstrapIndices(n, rng)`, `GetBootstrapSample(X, y, rng)`.
+Utilities: `ForestParams` / `DefaultForestParams()`, `GenerateBootstrapIndices(n, rng)`, `GetBootstrapSample(X, y, rng)`.
 
 ---
 
-## `model_selection` — Validación y búsqueda
+## `model_selection` — Validation and search
 
 ### `KFold`
 
@@ -266,11 +266,11 @@ splits := kf.Split(nSamples) // []SplitRecord{TrainIndices, TestIndices}
 func CrossValScore(model Estimator, X [][]float64, y []float64, cv KFold) ([]float64, error)
 ```
 
-`Estimator` es cualquier modelo con `Fit(X, y) error` y `Score(X, y) (float64, error)` — p. ej. Random Forest o `LogisticRegression` (los árboles de `tree/`, con `Fit` de 3 argumentos, no cumplen esta interfaz).
+`Estimator` is any model with `Fit(X, y) error` and `Score(X, y) (float64, error)` — e.g. Random Forest or `LogisticRegression` (trees from `tree/`, with `Fit` of 3 arguments, do not meet this interface).
 
 ### `GridSearchCV`
 
-Búsqueda exhaustiva **paralela** sobre una lista explícita de combinaciones:
+Comprehensive **parallel** search on an explicit list of combinations:
 
 ```go
 gs := &model_selection.GridSearchCV{
@@ -285,7 +285,7 @@ gs := &model_selection.GridSearchCV{
         {"lr": 0.10, "iter": 200},
     },
     CV:   model_selection.KFold{NSplits: 3, Shuffle: true, RandomState: 42},
-    NJobs: -1, // -1 = todos los núcleos
+    NJobs: -1, // -1 = all cores
 }
 
 err := gs.Fit(X, y)
@@ -294,14 +294,14 @@ err := gs.Fit(X, y)
 
 ---
 
-## `persistence` — Guardar y cargar modelos
+## `persistence` — Save and Load Models
 
-| Función | Firma | Descripción |
+| Function | Signature | Description |
 | :--- | :--- | :--- |
-| `Save` | `(filename string, model interface{}) error` | Serializa a `gob` |
-| `Load` | `(filename string, model interface{}) error` | Deserializa + valida (ver `Validator`) |
-| `Dump` | `(model interface{}, w io.Writer) error` | Serializa a cualquier `io.Writer` |
-| `LoadFrom` | `(r io.Reader, model interface{}) error` | Deserializa desde cualquier `io.Reader` |
+| `Save` | `(filename string, model interface{}) error` | Serialize to `gob` |
+| `Load` | `(filename string, model interface{}) error` | Deserialize + validate (see `Validator`) |
+| `Dump` | `(model interface{}, w io.Writer) error` | Serialize to any `io.Writer` |
+| `LoadFrom` | `(r io.Reader, model interface{}) error` | Deserialize from any `io.Reader` |
 
 ```go
 type Validator interface {
@@ -309,13 +309,13 @@ type Validator interface {
 }
 ```
 
-Los modelos que implementan `Validator` (Random Forest, etc.) se validan automáticamente tras `Load`: detecta archivos corruptos y modelos sin entrenar.
+Models that implement `Validator` (Random Forest, etc.) are automatically validated after `Load`: it detects corrupt files and untrained models.
 
 ---
 
-## `crypto` — Pipeline OHLCV → señal
+## `crypto` — OHLCV → signal pipeline
 
-### Tipos de datos
+### Data Types
 
 ```go
 type OHLCV struct { Open, High, Low, Close, Volume float64 }
@@ -330,24 +330,24 @@ const (
 
 ### Features (`FeatureConfig`)
 
-Campos booleanos (todos `true` con `NewFeatureConfig()`): `Returns`, `LogReturns`, `PriceRange`, `VolumeRatio`, `Momentum`, `VWAP`.
+Boolean fields (all `true` with `NewFeatureConfig()`): `Returns`, `LogReturns`, `PriceRange`, `VolumeRatio`, `Momentum`, `VWAP`.
 
-| Función | Firma |
+| Role | Signature |
 | :--- | :--- |
-| `ToFeatureVector` | `(candles []OHLCV, cfg FeatureConfig) ([]float64, error)` — una ventana |
+| `ToFeatureVector` | `(candles []OHLCV, cfg FeatureConfig) ([]float64, error)` — a window |
 | `BuildFeatureMatrix` | `(candles []OHLCV, windowSize int, cfg FeatureConfig) ([][]float64, error)` — sliding window |
-| `FeatureSize` | `(windowSize int, cfg FeatureConfig) int` — nº de columnas resultantes |
-| `MinWindowSize` | `() int` — ventana mínima admitida |
+| `FeatureSize` | `(windowSize int, cfg FeatureConfig) int` — # of resulting columns |
+| `MinWindowSize` | `() int` — minimum window allowed |
 
 ### `CryptoPredictor`
 
 ```go
 type PredictorConfig struct {
-    NEstimators    int           // árboles del bosque (default 100)
-    MaxDepth       int           // profundidad (default 10)
-    WindowSize     int           // velas por ventana (default 20)
-    MinConfidence  float64       // umbral para señal no-HOLD (default 0.55)
-    Features       FeatureConfig // grupos de features
+    NEstimators    int           // forest trees (default 100)
+    MaxDepth       int           // depth (default 10)
+    WindowSize     int           // candles per window (default 20)
+    MinConfidence  float64       // threshold for non-HOLD signal (default 0.55)
+    Features       FeatureConfig // feature groups
 }
 cfg := crypto.DefaultPredictorConfig()
 
@@ -355,9 +355,9 @@ p := crypto.NewCryptoPredictor(cfg)
 p.Fit(candles []OHLCV, labels []float64) error  // len(labels) == len(candles)-WindowSize+1
 p.PredictSignal(candles []OHLCV) (Signal, float64, error) // len(candles) == WindowSize
 p.SaveModel(path string) error
-p.LoadModel(path string) error                  // modelo + scaler juntos
+p.LoadModel(path string) error                  // model + scaler together
 p.Config() PredictorConfig
 p.IsFitted() bool
 ```
 
-Guía completa de uso en [../USAGE.md](../USAGE.md).
+Complete user guide in [../USAGE.md](../USAGE.md).

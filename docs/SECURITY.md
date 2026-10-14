@@ -1,44 +1,44 @@
-# 🔒 Seguridad
+# 🔒 Security
 
-## Versiones soportadas
+## Supported Versions
 
-| Versión | Soportada |
+| Version | Supported |
 | :--- | :--- |
-| Última versión en `main` | ✅ |
-| Cualquier versión anterior | ❌ |
+| Latest version on `main` | ✅ |
+| Any older version | ❌ |
 
-Este proyecto se distribuye sin garantías (ver [LICENSE](LICENSE)). Solo se corrigen vulnerabilidades en la rama principal.
+This project is distributed without warranties (see [LICENSE](LICENSE)). Only the main branch receives vulnerability fixes.
 
-## Reportar una vulnerabilidad
+## Reporting a Vulnerability
 
-Por favor, **no abras una issue pública** para reportar vulnerabilidades de seguridad.
+Please **do not open a public issue** to report security vulnerabilities.
 
-Usa la función de [Security Advisories de GitHub](https://github.com/ateto3/gopherml/security/advisories/new) para informar de forma privada. Si no puedes usarla, contacta directamente al mantenedor a través de GitHub ([@ateto3](https://github.com/ateto3)).
+Use GitHub's [Security Advisories](https://github.com/ateto3/gopherml/security/advisories/new) feature to report privately. If you cannot use it, contact the maintainer directly through GitHub ([@ateto3](https://github.com/ateto3)).
 
-Incluya en el reporte:
+Include in the report:
 
-1. **Descripción** del problema y su impacto potencial.
-2. **Pasos para reproducirlo** (pseudocódigo, snippet o test mínimo).
-3. **Versión / commit** afectado.
-4. **Mitigación conocida**, si la hay.
+1. **Description** of the problem and its potential impact.
+2. **Steps to reproduce** (pseudocode, snippet or minimal test).
+3. **Version / commit** affected.
+4. **Known mitigation**, if any.
 
-## Qué esperar
+## What to expect
 
-- **Acuse de recibo** en un plazo razonable (objetivo: 72 horas).
-- **Evaluación** del impacto y confirmación de la vulnerabilidad.
-- **Corrección y publicación** antes de cualquier divulgación coordinada.
-- Crédito en el `CHANGELOG.md` si lo deseas (o anonimato si lo prefieres).
+- **Acknowledgment** within a reasonable time (target: 72 hours).
+- **Assessment** of the impact and confirmation of the vulnerability.
+- **Fix and release** before any coordinated disclosure.
+- Credit in the `CHANGELOG.md` if you wish (or anonymity if you prefer).
 
-## Alcance
+## Scope
 
-Dentro del alcance:
+In scope:
 
-- Validación de datos (`utils.CheckFinite`) y errores de seguridad en la gestión de entradas.
-- Persistencia (`persistence.Load`): corrupción de archivos, validación de integridad de modelos.
-- Cualquier fuga de memoria o condición de carrera detectable con `go test -race`.
+- Data validation (`utils.CheckFinite`) and security issues in input handling.
+- Persistence (`persistence.Load`): file corruption, model integrity validation.
+- Any memory leak or race condition detectable with `go test -race`.
 
-Fuera de alcance:
+Out of scope:
 
-- Problemas de rendimiento sin impacto de seguridad.
-- Vulnerabilidades en exchanges o APIs de terceros usadas junto a GopherML.
-- `go-nlp/nltk/`: código de referencia importado de NLTK (Python) para comparación algorítmica; no forma parte del runtime de Go.
+- Performance issues without security impact.
+- Vulnerabilities in exchanges or third-party APIs used alongside GopherML.
+- `go-nlp/nltk/`: reference code imported from NLTK (Python) for algorithmic comparison; it is not part of the Go runtime.

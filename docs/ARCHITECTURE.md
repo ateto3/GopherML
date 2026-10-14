@@ -1,108 +1,108 @@
-# 🏗️ Arquitectura de GopherML
+# 🏗️ GopherML Architecture
 
-Este documento describe la arquitectura del proyecto, los patrones de diseño y las decisiones técnicas. Para una explicación más narrativa de los algoritmas, ver [EXPLAINING.md](../EXPLAINING.md).
-
----
-
-## 1. Filosofía
-
-1. **Espejo de scikit-learn:** paquetes, nombres de métodos y flujos idénticos a `sklearn` para que la curva de aprendizaje sea cero si vienes de Python.
-2. **Cero dependencias:** exclusivamente librería estándar de Go. Sin Cgo, sin NumPy, sin bindings.
-3. **Eficiencia de datos:** *flat arrays*, memoria pre-asociada y acceso directo para mejorar la localidad de caché.
-4. **Concurrencia donde compensa:** goroutines solo en operaciones con trabajo suficiente para justificar el coste de sincronización.
-5. **Fallar rápido y ruidoso:** toda entrada inválida (`NaN`, `Inf`, dimensiones inconsistentes, modelo sin entrenar) produce un `error` explícito — nunca resultados silenciosamente erróneos.
+This document describes the project architecture, design patterns, and technical decisions. For a more narrative explanation of the algorithms, see [EXPLAINING.md](../EXPLAINING.md).
 
 ---
 
-## 2. Capas del sistema
+## 1. Philosophy
+
+1. **scikit-learn mirror:** packages, method names, and flows identical to `sklearn` for zero learning curve if you come from Python.
+2. **Zero dependencies:** exclusively Go standard library. No Cgo, no NumPy, no bindings.
+3. **Data efficiency:** flat arrays, pre-allocated memory, and direct access to improve cache locality.
+4. **Concurrency where it pays:** goroutines only in operations with enough work to justify synchronization cost.
+5. **Fail fast and loud:** all invalid input (`NaN`, `Inf`, inconsistent dimensions, untrained model) produces an explicit `error` — never silently wrong results.
+
+---
+
+## 2. System Layers
 
 ```
                 ┌─────────────────────────────────────────────┐
-   Capa alta    │  crypto/   (OHLCV → features → señal)       │  ← orquestación
+   High layer   │  crypto/   (OHLCV → features → signal)      │  ← orchestration
                 ├─────────────────────────────────────────────┤
                 │  model_selection/   (KFold, CV, GridSearch) │
                 │  persistence/       (Save/Load + Validator) │
                 ├─────────────────────────────────────────────┤
-   Modelos      │  ensemble/ (RandomForest) ──► tree/ (CART)   │
+   Models       │  ensemble/ (RandomForest) ──► tree/ (CART)   │
                 │  linear_model/ (OLS, Ridge, Lasso, Logistic,│
                 │                  ElasticNet, SGD)           │
                 ├─────────────────────────────────────────────┤
-   Soporte      │  preprocessing/ (scalers, encoders)         │
+   Support      │  preprocessing/ (scalers, encoders)         │
                 │  metrics/ (accuracy, F1, R², ROC-AUC...)    │
                 ├─────────────────────────────────────────────┤
-   Base         │  utils/ (CheckFinite, TrainTestSplit, RNG)  │  ← todo pasa por aquí
+   Base         │  utils/ (CheckFinite, TrainTestSplit, RNG)  │  ← everything passes through here
                 └─────────────────────────────────────────────┘
 ```
 
-Regla de dependencias: **una capa solo puede usar las que están debajo**. `utils` no importa de nadie; `crypto` puede usar todo lo demás.
+Dependency rule: **a layer can only use those below it**. `utils` imports from no one; `crypto` can use everything else.
 
 ---
 
-## 3. Flujo de datos de un entrenamiento
+## 3. Training Data Flow
 
 ```
-Datos crudos ([][]float64)
+Raw data ([][]float64)
       │
       ▼
-utils.CheckXy / CheckFinite      ← valida NaN/Inf y dimensiones
+utils.CheckXy / CheckFinite      ← validates NaN/Inf and dimensions
       │
       ▼
-preprocessing (opcional)         ← Fit en train, Transform en train y test
+preprocessing (optional)         ← Fit on train, Transform on train and test
       │
       ▼
-model.Fit(X, y)                  ← cada modelo vuelve a validar internamente
+model.Fit(X, y)                  ← each model validates internally again
       │                              (CheckFinite + CheckIsFitted)
       ▼
-model.Predict(X) / PredictSingle ← inferencia batch o de una muestra
+model.Predict(X) / PredictSingle ← batch or single sample inference
       │
       ▼
-metrics.* (yTrue, yPred)         ← evaluación
+metrics.* (yTrue, yPred)         ← evaluation
       │
       ▼
-persistence.Save("modelo.gob")   ← gob + validación de integridad al cargar
+persistence.Save("model.gob")    ← gob + integrity validation on load
 ```
 
 ---
 
-## 4. Patrones de diseño
+## 4. Design Patterns
 
-### 4.1 Struct embedding (heredaría a lo Python)
+### 4.1 Struct embedding (Python-like inheritance)
 
 ```go
 type LinearModel struct { Coef []float64; Intercept float64 /* ... */ }
 
 type Lasso struct {
-    LinearModel          // ← embebe el modelo base
+    LinearModel          // ← embeds base model
     Alpha float64
     // ...
 }
 ```
 
-`Ridge`, `Lasso`, `ElasticNet` y `LinearRegression` embeben `LinearModel` y reutilizan su lógica de resolución de sistemas lineales (Eliminación Gaussiana). Los hiperparámetros de Random Forest viven en `ensemble.BaseForest`.
+`Ridge`, `Lasso`, `ElasticNet`, and `LinearRegression` embed `LinearModel` and reuse its linear system solving logic (Gaussian Elimination). Random Forest hyperparameters live in `ensemble.BaseForest`.
 
-**Convención:** los coeficientes se acceden directamente (`model.Coef`), sin getters.
+**Convention:** coefficients are accessed directly (`model.Coef`), without getters.
 
-### 4.2 Interfaces pequeñas
+### 4.2 Small interfaces
 
-| Interfaz | Paquete | Propósito |
+| Interface | Package | Purpose |
 | :--- | :--- | :--- |
-| `Estimator` (`Fit` + `Score`) | `model_selection` | Cualquier modelo evaluável por `CrossValScore`/`GridSearchCV` |
-| `Validator` (`ValidateLoaded`) | `persistence` | Auto-validación de integridad tras `Load` |
-| `Criterion`, `Splitter`, `TreeBuilder` | `tree` | Estrategias intercambiables de partición (Gini/Entropía/MSE, mejor split/random) |
+| `Estimator` (`Fit` + `Score`) | `model_selection` | Any model evaluable by `CrossValScore`/`GridSearchCV` |
+| `Validator` (`ValidateLoaded`) | `persistence` | Auto integrity validation after `Load` |
+| `Criterion`, `Splitter`, `TreeBuilder` | `tree` | Interchangeable split strategies (Gini/Entropy/MSE, best split/random) |
 
-### 4.3 Constructores con defaults seguros
+### 4.3 Constructors with safe defaults
 
-Siempre `New...()`:
+Always `New...()`:
 
 ```go
-rf := ensemble.NewRandomForestClassifier() // NEstimators, MaxDepth, RandomState inicializados
+rf := ensemble.NewRandomForestClassifier() // NEstimators, MaxDepth, RandomState initialized
 ```
 
-Un struct literal vacío (`&ensemble.RandomForestClassifier{}`) puede entrenar con hiperparámetros cero.
+An empty struct literal (`&ensemble.RandomForestClassifier{}`) may train with zero hyperparameters.
 
-### 4.4 Errores sentinela
+### 4.4 Sentinel errors
 
-Paquetes como `tree` y `linear_model` exportan errores comparables con `errors.Is`:
+Packages like `tree` and `linear_model` export errors comparable with `errors.Is`:
 
 ```go
 var ErrNotFitted         = errors.New("tree is not fitted yet")
@@ -112,44 +112,44 @@ var ErrEmptyData         = errors.New("empty input data")
 
 ---
 
-## 5. Paralelismo inteligente
+## 5. Intelligent parallelism
 
-GopherML no paraleliza por paralelizar:
+GopherML doesn't parallelize for the sake of parallelizing:
 
-| Operación | ¿Paralela? | Mecanismo |
+| Operation | Parallel? | Mechanism |
 | :--- | :--- | :--- |
-| Entrenamiento de Random Forest | ✅ | Una goroutine por árbol + `sync.WaitGroup` |
-| `GridSearchCV` | ✅ | Una goroutine por combinación de hiperparámetros (`NJobs`) |
-| Álgebra lineal (Gram matrix, `MatVec`) | ✅ | Bloques de filas vía `ParallelFor` / `WorkerPool` |
-| Predicción de una muestra (`PredictSingle`) | ❌ | El overhead de goroutines supera al trabajo útil |
-| Escalado de datasets pequeños | ❌ | Secuencial es más rápido |
+| Random Forest training | ✅ | One goroutine per tree + `sync.WaitGroup` |
+| `GridSearchCV` | ✅ | One goroutine per hyperparameter combination (`NJobs`) |
+| Linear algebra (Gram matrix, `MatVec`) | ✅ | Row blocks via `ParallelFor` / `WorkerPool` |
+| Single sample prediction (`PredictSingle`) | ❌ | Goroutine overhead exceeds useful work |
+| Small dataset scaling | ❌ | Sequential is faster |
 
-Detalles y benchmarks en [PERFORMANCE.md](PERFORMANCE.md) y [../linear_model/PERFORMANCE.md](../linear_model/PERFORMANCE.md).
-
----
-
-## 6. Diseño del paquete `tree` (base de `ensemble`)
-
-- **Nodos indexados:** el árbol guarda los nodos en un `[]Node` plano con índices enteros en lugar de punteros entre structs → menos presión sobre el recolector de basura y mejor localidad de caché.
-- **Constructor DFS iterativo:** `DepthFirstTreeBuilder` usa una pila explícita (`StackRecord`) en lugar de recursión → imposible sufrir stack overflow con `MaxDepth` grandes.
-- **Splitter con criterio intercambiable:** `BestSplitter` (búsqueda exhaustiva) o `RandomSplitter` (usado por Random Forest para la aleatoriedad por nodo), combinado con `Gini`, `Entropy` o `MSE`.
+Details and benchmarks in [PERFORMANCE.md](PERFORMANCE.md) and [../linear_model/PERFORMANCE.md](../linear_model/PERFORMANCE.md).
 
 ---
 
-## 7. Persistencia
+## 6. `tree` package design (base of `ensemble`)
 
-- Formato **`gob`** de la librería estándar: rápido, nativo de Go, sin dependencias.
-- `persistence.Save` serializa el modelo completo; `Load` lo deserializa en un modelo que tú proporcionas (el tipo debe coincidir).
-- Si el modelo implementa `Validator`, `Load` ejecuta `ValidateLoaded()` automáticamente y falla si el modelo quedó a medias (archivo corrupto, estructura incompleta).
-- `CryptoPredictor.SaveModel` guarda internamente modelo **y** scaler juntos, evitando el error clásico de desajuste entre train e inferencia.
+- **Indexed nodes:** the tree stores nodes in a flat `[]Node` with integer indices instead of pointers between structs → less garbage collector pressure and better cache locality.
+- **Iterative DFS constructor:** `DepthFirstTreeBuilder` uses an explicit stack (`StackRecord`) instead of recursion → impossible to suffer stack overflow with large `MaxDepth`.
+- **Splitter with interchangeable criterion:** `BestSplitter` (exhaustive search) or `RandomSplitter` (used by Random Forest for per-node randomness), combined with `Gini`, `Entropy`, or `MSE`.
 
 ---
 
-## 8. Convenciones de código
+## 7. Persistence
 
-- Comentarios de doc en **inglés** que empiezan por el nombre del símbolo (`// RandomForestClassifier implements...`).
-- Nombres de paquete en `snake_case` estilo sklearn (`linear_model`, `model_selection`).
-- Los tests viven en el mismo paquete (`*_test.go`) y son deterministas (`utils.NewRNG(seed)`).
-- Nada de estado global: los modelos son structs autocontenidos; las predicciones no mutan estado, por lo que son seguras en paralelo **después** de `Fit`.
+- **`gob` format** from the standard library: fast, Go-native, no dependencies.
+- `persistence.Save` serializes the complete model; `Load` deserializes it into a model you provide (the type must match).
+- If the model implements `Validator`, `Load` executes `ValidateLoaded()` automatically and fails if the model is incomplete (corrupt file, incomplete structure).
+- `CryptoPredictor.SaveModel` saves model **and** scaler together internally, avoiding the classic mismatch error between train and inference.
 
-Ver [CONTRIBUTING.md](../CONTRIBUTING.md) para el flujo completo de contribución.
+---
+
+## 8. Code conventions
+
+- Doc comments in **English** starting with the symbol name (`// RandomForestClassifier implements...`).
+- Package names in `snake_case` sklearn style (`linear_model`, `model_selection`).
+- Tests live in the same package (`*_test.go`) and are deterministic (`utils.NewRNG(seed)`).
+- No global state: models are self-contained structs; predictions don't mutate state, so they are parallel-safe **after** `Fit`.
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for the complete contribution workflow.

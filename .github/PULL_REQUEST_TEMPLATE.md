@@ -1,29 +1,29 @@
-## Descripción
+## Description
 
-<!-- ¿Qué cambia y por qué? Enlaza la issue si existe: Fixes #NN -->
+<!-- What changes and why? Link the issue if there is one: Fixes #NN -->
 
-## Tipo de cambio
+## Type of change
 
-- [ ] 🐛 Fix (corrección de un bug)
-- [ ] ✨ Feature (nueva funcionalidad)
-- [ ] 📚 Documentación
-- [ ] ⚡ Mejora de rendimiento
+- [ ] 🐛 Fix (bug fix)
+- [ ] ✨ Feature (new functionality)
+- [ ] 📚 Documentation
+- [ ] ⚡ Performance improvement
 - [ ] 🧪 Tests
-- [ ] 🔨 Refactor (sin cambio de comportamiento)
+- [ ] 🔨 Refactor (no behavior change)
 
-## Cómo se ha validado
+## How it was validated
 
-<!-- Comandos ejecutados y resultado -->
+<!-- Commands run and results -->
 
-- [ ] `go build ./...` pasa
-- [ ] `go vet ./...` pasa
-- [ ] `go test ./... -race` pasa
-- [ ] `gofmt -w .` aplicado
-- [ ] He añadido/actualizado tests para el cambio
-- [ ] He actualizado la documentación afectada (`README`, `USAGE`, `docs/`, `CHANGELOG`)
+- [ ] `go build ./...` passes
+- [ ] `go vet ./...` passes
+- [ ] `go test ./... -race` passes
+- [ ] `gofmt -w .` applied
+- [ ] I have added/updated tests for the change
+- [ ] I have updated the affected documentation (`README`, `USAGE`, `docs/`, `CHANGELOG`)
 
-## Notas de rendimiento
+## Performance notes
 
-<!-- Si tocas hot path: ¿allocs/op, benchmarks antes/después? Escribe "N/A" si no aplica -->
+<!-- If you touch the hot path: allocs/op, before/after benchmarks? Write "N/A" if not applicable -->
 
 N/A

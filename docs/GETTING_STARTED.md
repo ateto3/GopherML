@@ -1,32 +1,32 @@
-# 🚀 Inicio rápido con GopherML
+# 🚀 Quick Start with GopherML
 
-Guía práctica para entrenar tu primer modelo con GopherML, desde cero hasta guardarlo en disco. Todos los ejemplos son programas completos y ejecutables.
+Practical guide to train your first model with GopherML, from scratch to saving it to disk. All examples are complete and executable programs.
 
-**Requisitos:** Go 1.23+ · ver [README.md](../README.md) para la instalación.
+**Requirements:** Go 1.23+ · see [README.md](../README.md) for installation.
 
 ---
 
-## 1. Conceptos de 30 segundos
+## 1. Concepts in 30 seconds
 
-GopherML replica la API de scikit-learn con tipos de Go:
+GopherML replicates scikit-learn's API with Go types:
 
-| Concepto | Tipo en GopherML | Forma |
+| Concept | GopherML Type | Form |
 | :--- | :--- | :--- |
-| **X** (features) | `[][]float64` | `[nMuestras][nFeatures]` |
-| **y** (etiquetas) | `[]float64` | `[nMuestras]` |
-| **Predicciones** | `[]float64` o `[]int` | según el modelo |
+| **X** (features) | `[][]float64` | `[nSamples][nFeatures]` |
+| **y** (labels) | `[]float64` | `[nSamples]` |
+| **Predictions** | `[]float64` or `[]int` | depending on model |
 
-Ciclo de vida de un modelo:
+Model lifecycle:
 
 ```
 NewModel() → Fit(X, y) → Predict(X) / PredictSingle(x) → Score(X, y)
 ```
 
-> ⚠️ Todos los métodos `Fit` y `Predict` validan que **ningún dato sea `NaN` ni `Inf`** y devuelven error si las dimensiones no coinciden. Nunca ignores el error.
+> ⚠️ All `Fit` and `Predict` methods validate that **no data is `NaN` or `Inf`** and return error if dimensions don't match. Never ignore the error.
 
 ---
 
-## 2. Tu primer modelo (clasificación)
+## 2. Your first model (classification)
 
 ```go
 package main
@@ -47,13 +47,13 @@ func main() {
 	}
 	y := []float64{0, 0, 0, 0, 1, 1, 1, 1}
 
-	// División train/test 75/25 con RNG determinista
+	// Train/test split 75/25 with deterministic RNG
 	XTrain, XTest, yTrain, yTest, err := utils.TrainTestSplit(X, y, 0.25, 42)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Entrenar un Random Forest
+	// Train a Random Forest
 	rf := ensemble.NewRandomForestClassifier()
 	rf.NEstimators = 100
 	rf.MaxDepth = 4
@@ -62,7 +62,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Predecir y convertir a []float64 para las métricas
+	// Predict and convert to []float64 for metrics
 	preds, err := rf.Predict(XTest)
 	if err != nil {
 		log.Fatal(err)
@@ -77,61 +77,61 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Accuracy: %.2f%%\n", acc*100)
-	fmt.Println("Predicciones:", preds)
+	fmt.Println("Predictions:", preds)
 
-	// Hot path: predicción de una sola muestra (más rápida, sin allocations extra)
+	// Hot path: single sample prediction (faster, no extra allocations)
 	label, err := rf.PredictSingle([]float64{7.7, 5.1})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Predicción única:", label)
+	fmt.Println("Single sample:", label)
 
-	// Probabilidades por clase (para filtrar por confianza)
+	// Probabilities per class (to filter by confidence)
 	proba, err := rf.PredictProbaSingle([]float64{7.7, 5.1})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Confianza clase 1: %.1f%%\n", proba[1]*100)
+	fmt.Printf("Class 1 confidence: %.1f%%\n", proba[1]*100)
 }
 ```
 
 ---
 
-## 3. Modelos lineales: escala primero
+## 3. Linear models: scale first
 
-Los modelos lineales exigen características normalizadas. **Ajusta el scaler solo con train**:
+Linear models require normalized features. **Fit the scaler only on train**:
 
 ```go
 scaler := preprocessing.NewStandardScaler()
-XTrainS, err := scaler.FitTransform(XTrain) // Fit solo en train
-XTestS, err := scaler.Transform(XTest)       // test usa los mismos parámetros
+XTrainS, err := scaler.FitTransform(XTrain) // Fit only on train
+XTestS, err  := scaler.Transform(XTest)       // test uses same parameters
 
 lr := linear_model.NewLinearRegression()
 if err := lr.Fit(XTrainS, yTrain); err != nil {
 	log.Fatal(err)
 }
 preds, err := lr.Predict(XTestS)
-r2, err := lr.Score(XTestS, yTest) // R² para regresión
+r2, err := lr.Score(XTestS, yTest) // R² for regression
 ```
 
-> Llamar a `Transform` antes de `Fit` devuelve un error explícito: nunca falla en silencio.
+> Calling `Transform` before `Fit` returns an explicit error: it never fails silently.
 
 ---
 
-## 4. Evaluar con métricas
+## 4. Evaluate with metrics
 
 ```go
 import "github.com/ateto3/gopherml/metrics"
 
-// Clasificación
+// Classification
 acc, _ := metrics.AccuracyScore(yTrue, yPred)
-precision, _ := metrics.PrecisionScore(yTrue, yPred, "macro") // "macro", "weighted" o ""
+precision, _ := metrics.PrecisionScore(yTrue, yPred, "macro") // "macro", "weighted" or ""
 recall, _ := metrics.RecallScore(yTrue, yPred, "macro")
 f1, _ := metrics.F1Score(yTrue, yPred, "macro")
 auc, _ := metrics.ROCAUCScore(yTrue, yScores)
 report, _ := metrics.ClassificationReport(yTrue, yPred)
 
-// Regresión
+// Regression
 mse, _ := metrics.MeanSquaredError(yTrue, yPred)
 rmse, _ := metrics.RootMeanSquaredError(yTrue, yPred)
 mae, _ := metrics.MeanAbsoluteError(yTrue, yPred)
@@ -140,27 +140,27 @@ r2, _ := metrics.R2Score(yTrue, yPred)
 
 ---
 
-## 5. Guardar y cargar el modelo
+## 5. Save and load the model
 
 ```go
 import "github.com/ateto3/gopherml/persistence"
 
-// Guardar (formato gob)
-if err := persistence.Save("modelo.gob", rf); err != nil {
+// Save (gob format)
+if err := persistence.Save("model.gob", rf); err != nil {
 	log.Fatal(err)
 }
 
-// Cargar en un modelo recién creado — la integridad se valida automáticamente
-cargado := ensemble.NewRandomForestClassifier()
-if err := persistence.Load("modelo.gob", cargado); err != nil {
-	// El error detecta archivos corruptos o modelos no entrenados
+// Load into a newly created model — integrity is validated automatically
+loaded := ensemble.NewRandomForestClassifier()
+if err := persistence.Load("model.gob", loaded); err != nil {
+	// The error detects corrupt files or untrained models
 	log.Fatal(err)
 }
 ```
 
 ---
 
-## 6. Validación cruzada antes de confiar en el modelo
+## 6. Cross-validation before trusting the model
 
 ```go
 import "github.com/ateto3/gopherml/model_selection"
@@ -170,14 +170,14 @@ scores, err := model_selection.CrossValScore(rf, X, y, kf)
 if err != nil {
 	log.Fatal(err)
 }
-fmt.Println("Scores por fold:", scores)
+fmt.Println("Scores per fold:", scores)
 ```
 
 ---
 
-## 7. Siguientes pasos
+## 7. Next steps
 
-- **Pipeline de cripto:** [USAGE.md § Paquete crypto](../USAGE.md)
-- **Búsqueda de hiperparámetros:** [examples/grid_search](../examples/grid_search/)
-- **Referencia completa:** [API_REFERENCE.md](API_REFERENCE.md)
-- **Rendimiento y hot path:** [PERFORMANCE.md](PERFORMANCE.md)
+- **Crypto pipeline:** [USAGE.md § crypto package](../USAGE.md)
+- **Hyperparameter search:** [examples/grid_search](../examples/grid_search/)
+- **Complete reference:** [API_REFERENCE.md](API_REFERENCE.md)
+- **Performance and hot path:** [PERFORMANCE.md](PERFORMANCE.md)

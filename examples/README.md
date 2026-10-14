@@ -1,68 +1,68 @@
-# 🧪 Ejemplos de GopherML
+# 🧪 GopherML Examples
 
-Programas ejecutables (`package main`) que demuestran el uso completo de la librería. Todos funcionan con datos incluidos en el propio código: no necesitan descargas externas.
+Executable programs (`package main`) that demonstrate full usage of the library. All of them run with data included in the code itself: no external downloads needed.
 
-**Requisitos:** Go 1.23+ y el módulo `github.com/ateto3/gopherml` disponible (ver [README](../README.md#2-instalación)).
+**Requirements:** Go 1.23+ and the module `github.com/ateto3/gopherml` available (see [README](../README.md#2-installation)).
 
 ---
 
-## Ejemplos disponibles
+## Available examples
 
-### 1. Clasificación básica
+### 1. Basic classification
 
-**Archivo:** [`classification/basic_classification.go`](classification/basic_classification.go)
+**File:** [`classification/basic_classification.go`](classification/basic_classification.go)
 
-Random Forest para clasificación binaria: escalado con `StandardScaler`, entrenamiento, predicción *batch* y de muestra única (`PredictSingle`), probabilidades (`PredictProba`), validación cruzada con `KFold` y métricas detalladas (precision, recall, F1).
+Random Forest for binary classification: scaling with `StandardScaler`, training, *batch* and single-sample prediction (`PredictSingle`), probabilities (`PredictProba`), cross-validation with `KFold` and detailed metrics (precision, recall, F1).
 
 ```bash
 go run examples/classification/basic_classification.go
 ```
 
-### 2. Regresión básica
+### 2. Basic regression
 
-**Archivo:** [`regression/basic_regression.go`](regression/basic_regression.go)
+**File:** [`regression/basic_regression.go`](regression/basic_regression.go)
 
-Comparación de `LinearRegression` y `RandomForestRegressor` en un problema de predicción de precios: escalado, predicciones, R², MSE/MAE y comparación entre modelos.
+Comparison of `LinearRegression` and `RandomForestRegressor` on a price prediction problem: scaling, predictions, R², MSE/MAE and model comparison.
 
 ```bash
 go run examples/regression/basic_regression.go
 ```
 
-### 3. Pipeline de trading de cripto
+### 3. Crypto trading pipeline
 
-**Archivo:** [`crypto/crypto_trading_bot.go`](crypto/crypto_trading_bot.go)
+**File:** [`crypto/crypto_trading_bot.go`](crypto/crypto_trading_bot.go)
 
-Pipeline completo con el paquete `crypto/`: genera velas OHLCV sintéticas, construye etiquetas por ventana deslizante, entrena un `CryptoPredictor`, guarda y recarga el modelo (`SaveModel`/`LoadModel`) y emite una señal `LONG`/`SHORT`/`HOLD` con su nivel de confianza.
+Full pipeline with the `crypto/` package: generates synthetic OHLCV candles, builds labels with a sliding window, trains a `CryptoPredictor`, saves and reloads the model (`SaveModel`/`LoadModel`) and emits a `LONG`/`SHORT`/`HOLD` signal with its confidence level.
 
 ```bash
 go run examples/crypto/crypto_trading_bot.go
 ```
 
-### 4. Persistencia de modelos
+### 4. Model persistence
 
-**Archivo:** [`persistence/model_persistence.go`](persistence/model_persistence.go)
+**File:** [`persistence/model_persistence.go`](persistence/model_persistence.go)
 
-Entrena un Random Forest, lo guarda en `gob`, lo recarga en un modelo nuevo y verifica que las predicciones coinciden. Además demuestra la detección de archivos corruptos mediante la interfaz `Validator`.
+Trains a Random Forest, saves it to `gob`, reloads it into a new model and verifies that predictions match. It also demonstrates corrupt-file detection through the `Validator` interface.
 
 ```bash
 go run examples/persistence/model_persistence.go
 ```
 
-### 5. Búsqueda de hiperparámetros
+### 5. Hyperparameter search
 
-**Archivo:** [`grid_search/hyperparameter_tuning.go`](grid_search/hyperparameter_tuning.go)
+**File:** [`grid_search/hyperparameter_tuning.go`](grid_search/hyperparameter_tuning.go)
 
-`GridSearchCV` paralelo (`NJobs: -1`) sobre `LogisticRegression`: fábrica de modelos, lista de combinaciones, puntuaciones por combinación y selección de los mejores parámetros.
+Parallel `GridSearchCV` (`NJobs: -1`) over `LogisticRegression`: model factory, list of combinations, scores per combination and selection of the best parameters.
 
 ```bash
 go run examples/grid_search/hyperparameter_tuning.go
 ```
 
-### 6. Pipeline de preprocesamiento
+### 6. Preprocessing pipeline
 
-**Archivo:** [`preprocessing/preprocessing_pipeline.go`](preprocessing/preprocessing_pipeline.go)
+**File:** [`preprocessing/preprocessing_pipeline.go`](preprocessing/preprocessing_pipeline.go)
 
-Uso de todos los transformadores: `StandardScaler` (incluyendo `InverseTransform`), `MinMaxScaler`, `LabelEncoder` (texto → enteros) y `PolynomialFeatures`, más el manejo de errores al usar `Transform` antes de `Fit`.
+Use of every transformer: `StandardScaler` (including `InverseTransform`), `MinMaxScaler`, `LabelEncoder` (text → integers) and `PolynomialFeatures`, plus error handling when calling `Transform` before `Fit`.
 
 ```bash
 go run examples/preprocessing/preprocessing_pipeline.go
@@ -70,19 +70,18 @@ go run examples/preprocessing/preprocessing_pipeline.go
 
 ---
 
-## Ejecutar todos
+## Run them all
 
 ```bash
 for f in examples/*/*.go; do
   echo "▶ $f"
   go run "$f" > /dev/null || exit 1
 done
-echo "✔ Todos los ejemplos ejecutan correctamente"
+echo "✔ All examples run correctly"
 ```
 
-## Notas
+## Notes
 
-- Cada directorio es un paquete independiente: puedes ejecutar un archivo suelto con `go run <ruta>` sin afectar al resto.
-- Los `.gob` que se crean durante la ejecución (persistencia/cripto) se borran automáticamente al finalizar y están excluidos del repositorio vía `.gitignore`.
-- Para ejemplos de rendimiento y *benchmarking*, ver [docs/PERFORMANCE.md](../docs/PERFORMANCE.md).
-
+- Each directory is a standalone package: you can run a single file with `go run <path>` without affecting the rest.
+- The `.gob` files created during execution (persistence/crypto) are deleted automatically at the end and are excluded from the repository via `.gitignore`.
+- For performance and *benchmarking* examples, see [docs/PERFORMANCE.md](../docs/PERFORMANCE.md).

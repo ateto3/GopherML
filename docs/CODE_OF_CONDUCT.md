@@ -1,47 +1,47 @@
-# 📜 Código de Conducta
+# 📜 Code of Conduct
 
-## Nuestro compromiso
+## Our Pledge
 
-Nos comprometemos a hacer de la participación en este proyecto una experiencia libre de acoso para todos, independientemente de la edad, discapacidad visible o invisible, etnia, características de género, identidad y expresión, nivel de experiencia, educación, situación socioeconómica, nacionalidad, apariencia personal, raza, religión o identidad y orientación sexual.
+We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-Nos comprometemos a actuar e interactuar de maneras que contribuyan a una comunidad abierta, acogedora, diversa, inclusiva y sana.
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
 
-## Nuestros estándares
+## Our Standards
 
-Ejemplos de comportamiento que contribuyen a crear un ambiente positivo en nuestra comunidad:
+Examples of behavior that contributes to a positive environment for our community:
 
-* Demostrar empatía y bondad ante otras personas
-* Respetar opiniones, puntos de vista y experiencias diferentes
-* Dar y recibir con gracia retroalimentación constructiva
-* Asumir la mejor intención e interpretar de forma caritosa las acciones de otros
-* Centrarse en lo que es mejor no solo para nosotros como individuos, sino para la comunidad
+* Demonstrating empathy and kindness toward other people
+* Being respectful of differing opinions, viewpoints, and experiences
+* Giving and gracefully accepting constructive feedback
+* Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience
+* Focusing on what is best not just for us as individuals, but for the overall community
 
-Ejemplos de comportamiento inaceptable:
+Examples of unacceptable behavior:
 
-* El uso de lenguaje o imágenes sexualizadas y atención o avances sexuales de cualquier tipo
-* Comentarios troll, insultantes o despectivos, y ataques personales o políticos
-* El acoso en público o privado
-* Publicar información privada de otras personas, como dirección postal o correo electrónico, sin su permiso explícito
-* Otras conductas que razonablemente podrían considerarse inapropiadas en un entorno profesional
+* The use of sexualized language or imagery, and sexual attention or advances of any kind
+* Trolling, insulting or derogatory comments, and personal or political attacks
+* Public or private harassment
+* Publishing others' private information, such as a physical or email address, without their explicit permission
+* Other conduct which could reasonably be considered inappropriate in a professional setting
 
-## Aplicación de responsabilidades
+## Enforcement Responsibilities
 
-Los mantenedores del proyecto son responsables de aclarar y hacer cumplir nuestros estándares de conducta aceptables y tomarán acciones apropiadas y correctivas de forma justa en respuesta a cualquier comportamiento que consideren inapropiado, ofensivo, perjudicial, explícito o indeseable.
+Community leaders are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that they deem inappropriate, offensive, harmful, obscene, disruptive, or unwanted.
 
-Los mantenedores del proyecto tienen el derecho y la responsabilidad de eliminar, editar o rechazar comentarios, *commits*, código, ediciones de wiki, *issues* y otras contribuciones que no se alineen con este Código de Conducta, y comunicarán las razones de sus decisiones de moderación cuando corresponda.
+Community leaders have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned with this Code of Conduct, and will communicate reasons for moderation decisions when appropriate.
 
-## Alcance
+## Scope
 
-Este Código de Conducta aplica tanto a espacios del proyecto como a espacios públicos donde un individuo esté en representación del proyecto o de su comunidad.
+This Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces.
 
-## Aplicación
+## Enforcement
 
-Los casos de comportamiento abusivo, acosador u ofensivo pueden ser reportados a los mantenedores del proyecto a través de los canales indicados en el perfil de GitHub de los mantenedores ([@ateto3](https://github.com/ateto3)). Todas las quejas serán revisadas e investigadas de manera rápida y justa.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement through the channels listed in the maintainers' GitHub profiles ([@ateto3](https://github.com/ateto3)). All complaints will be reviewed and investigated promptly and fairly.
 
-Todos los mantenedores del proyecto están obligados a respetar la privacidad y la seguridad de quien reporte un incidente.
+All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
-## Atribución
+## Attribution
 
-Este Código de Conducta está adaptado del [Contributor Covenant](https://www.contributor-covenant.org), versión 2.1, disponible en <https://www.contributor-covenant.org/version/2/1/code_of_conduct.html>.
+This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1, available at <https://www.contributor-covenant.org/version/2/1/code_of_conduct.html>.
 
-Las pautas de aplicación inspiradas en la [Guía de la Comunidad de Mozilla](https://github.com/mozilla/diversity) también fueron incorporadas.
+Enforcement guidelines inspired by the [Mozilla Community Standards](https://github.com/mozilla/diversity) were also incorporated.

@@ -6,30 +6,30 @@
 [![License](https://img.shields.io/github/license/ateto3/gopherml/go-nlp)](../LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ateto3/gopherml/go-nlp.svg)](https://pkg.go.dev/github.com/ateto3/gopherml/go-nlp)
 
-`go-nlp` es una solución integral y de alto rendimiento desarrollada en **Go** para el procesamiento del lenguaje natural (NLP) y la optimización de costes en el consumo de APIs de Inteligencia Artificial (LLMs). Este repositorio sigue el modelo arquitectónico **Open Core**:
+`go-nlp` is a comprehensive, high-performance solution developed in **Go** for natural language processing (NLP) and cost optimization in the consumption of Artificial Intelligence APIs (LLMs). This repository follows the * * Open Core * * architectural model:
 
-1. **`go-nlp` Library (Código Abierto)**: Herramientas nativas de Go para tokenización, limpieza de texto, remoción de stopwords y análisis sintáctico local de ultra-baja latencia.
-2. **AI API Gateway (Documentación de Producción / Privado)**: Una arquitectura de middleware en Go diseñada para conectarse a marketplaces como **RapidAPI**, actuando como un filtro inteligente que reduce drásticamente el consumo de tokens (input/output) antes de interactuar con proveedores como OpenAI, Anthropic o Google Gemini.
+1. **`go-nlp` Library (Open Source)**: Native Go tools for tokenization, text cleaning, stopword removal, and ultra-low latency local syntactic analysis.
+2. **AI API Gateway (Production/Private Documentation)**: A Go middleware architecture designed to connect to marketplaces like **RapidAPI**, acting as an intelligent filter that drastically reduces token consumption (input/output) before interacting with providers like OpenAI, Anthropic, or Google Gemini.
 
 ---
 
-## 🚀 ¿Por qué `go-nlp`?
+## 🚀 Why `go-nlp`?
 
-NLTK es el toolkit de NLP más completo en Python, pero su ejecución es secuencial y sufre del GIL (Global Interpreter Lock). `go-nlp` rescata su filosofía modular y su riqueza algorítmica, pero la implementa desde cero en Go con:
+NLTK is the most complete NLP toolkit in Python, but its execution is sequential and suffers from GIL (Global Interpreter Lock). `go-nlp` rescues its modular philosophy and algorithmic richness, but implements it from scratch in Go with:
 
-- **Tokenización concurrente:** Procesamiento de documentos completos dividiendo el texto en chunks que se tokenizan en paralelo mediante worker pools.
-- **Tagging POS paralelo:** Los modelos de etiquetado (HMM, Perceptron, TnT, Brill) se ejecutan sobre goroutines independientes por oración.
-- **Parsing distribuido:** Gramáticas libres de contexto, PCFG, dependency parsing y CCG ejecutados con estrategias de chart parsing paralelizable (CYK, Earley).
-- **Clasificación escalable:** Naive Bayes, MaxEnt, Decision Trees, SVM y clustering (K-Means, EM, GAAC) con soporte nativo para entrenamiento distribuido.
-- **Análisis de sentimiento a escala:** Procesamiento en streaming de grandes volúmenes de texto con pipelines concurrentes.
-- **Zero-copy string processing:** Uso intensivo de `[]byte` y `strings.Builder` para minimizar presión del GC.
-- **Zero-Dependency:** Mínimas dependencias externas. Implementaciones propias de algoritmos sin recurrir a bindings de C o Python.
+- **Concurrent tokenization:** Processing complete documents by dividing text into chunks that are tokenized in parallel via worker pools.
+- **Parallel POS tagging:** Tagging models (HMM, Perceptron, TnT, Brill) run on independent goroutines per sentence.
+- **Distributed parsing:** Context-free grammars, PCFG, dependency parsing, and CCG executed with parallelizable chart parsing strategies (CYK, Earley).
+- **Scalable classification:** Naive Bayes, MaxEnt, Decision Trees, SVM, and clustering (K-Means, EM, GAAC) with native support for distributed training.
+- **Sentiment analysis at scale:** Streaming processing of large text volumes with concurrent pipelines.
+- **Zero-copy string processing:** Intensive use of `[]byte` and `strings.Builder` to minimize GC pressure.
+- **Zero-Dependency:** Minimal external dependencies. Own algorithm implementations without resorting to C or Python bindings.
 
 ---
 
 ## 📊 Cost Optimization Results
 
-| Optimización | Reducción Input | Reducción Output | Ahorro Total |
+| Optimization | Input Reduction | Output Reduction | Total Savings |
 |--------------|-----------------|------------------|--------------|
 | Stopword Removal | 15-20% | - | 15-20% |
 | Filler Elimination | 10-15% | - | 10-15% |
@@ -40,7 +40,7 @@ NLTK es el toolkit de NLP más completo en Python, pero su ejecución es secuenc
 
 **Combined Potential**: 70-85% reduction in token consumption
 
-### Ejemplo de Ahorro
+Savings Example
 
 **Scenario**: 1M tokens/mes baseline
 
@@ -52,78 +52,78 @@ NLTK es el toolkit de NLP más completo en Python, pero su ejecución es secuenc
 
 ---
 
-## 🧠 Arquitectura heredada de NLTK — Potenciada por Go
+## NLTK Legacy 🧠 Architecture — Powered by Go
 
-La siguiente tabla mapea los paquetes de **NLTK (Python)** con los módulos de **go-nlp (Go)**:
+The following table maps the **NLTK (Python)** packages with the ** go-nlp (Go)** modules:
 
-| Módulo NLTK (Python)       | Módulo go-nlp (Go)               | Mejora Concurrente                          |
+| NLTK Module (Python)       | go-nlp Module (Go)               | Concurrent Improvement                          |
 |----------------------------|----------------------------------|---------------------------------------------|
-| `nltk.tokenize`            | `tokenizer/`                     | Tokenización paralela por chunks            |
-| `nltk.tag`                 | `tagger/`                        | Etiquetado POS multi-goroutine              |
-| `nltk.parse`               | `parser/`                        | Chart parsing concurrente                   |
-| `nltk.chunk`               | `chunker/`                       | Chunking paralelo sobre tags                |
-| `nltk.classify`            | `classify/`                      | Entrenamiento distribuido                   |
-| `nltk.sentiment`           | `sentiment/`                     | Pipeline de análisis en streaming           |
-| `nltk.stem`                | `stemmer/`                       | Stemming/Lematización batch                 |
-| `nltk.corpus`              | `corpus/`                        | Carga lazy con caché concurrente            |
+| `nltk.tokenize`            | `tokenizer/`                     | Parallel chunk tokenization            |
+| `nltk.tag`                 | `tagger/`                        | Multi-goroutine POS tagging              |
+| `nltk.parse`               | `parser/`                        | Concurrent chart parsing                   |
+| `nltk.chunk`               | `chunker/`                       | Parallel chunking over tags                |
+| `nltk.classify`            | `classify/`                      | Distributed training                   |
+| `nltk.sentiment`           | `sentiment/`                     | Streaming analysis pipeline           |
+| `nltk.stem`                | `stemmer/`                       | Batch stemming/lemmatization                 |
+| `nltk.corpus`              | `corpus/`                        | Lazy loading with concurrent cache            |
 | `nltk.probability`         | `probability/`                   | FreqDist, ProbDist, Witten-Bell, Good-Turing|
-| `nltk.collocations`        | `collocations/`                  | Bigram/Trigram scoring paralelo             |
-| `nltk.text`                | `text/`                          | Concordancia, similitud contextual          |
-| `nltk.metrics`             | `metrics/`                       | Agreement, scores, confusión matrix         |
-| `nltk.cluster`             | `cluster/`                       | K-Means, EM, GAAC paralelos                 |
-| `nltk.sem`                 | `sem/`                           | Lógica de primer orden, lambda-cálculo      |
-| `nltk.inference`           | `inference/`                     | Prover9/Mace4 wrapper asíncrono             |
-| `nltk.lm`                  | `lm/`                            | Modelos de lenguaje (MLE, Kneser-Ney)       |
-| `nltk.tree`                | `tree/`                          | Árboles sintácticos inmutables              |
-| `nltk.featstruct`          | `featstruct/`                    | Feature structures con unificación          |
+| `nltk.collocations`        | `collocations/`                  | Parallel Bigram/Trigram scoring             |
+| `nltk.text`                | `text/`                          | Concordance, contextual similarity          |
+| `nltk.metrics`             | `metrics/`                       | Agreement, scores, confusion matrix         |
+| `nltk.cluster`             | `cluster/`                       | Parallel K-Means, EM, GAAC                 |
+| `nltk.sem`                 | `sem/`                           | First-order logic, lambda calculus      |
+| `nltk.inference`           | `inference/`                     | Async Prover9/Mace4 wrapper             |
+| `nltk.lm`                  | `lm/`                            | Language models (MLE, Kneser-Ney)       |
+| `nltk.tree`                | `tree/`                          | Immutable syntactic trees              |
+| `nltk.featstruct`          | `featstruct/`                    | Feature structures with unification          |
 | `nltk.grammar`             | `grammar/`                       | CFG, PCFG, Feature Grammar                  |
-| `nltk.translate`           | `translate/`                     | IBM Models 1-3, sacábamos                   |
+| `nltk.translate`           | `translate/`                     | IBM Models 1-3, statistical models                     |
 | `nltk.wsd`                 | `wsd/`                           | Lesk algorithm, sense disambiguation        |
-| `nltk.downloader`          | `downloader/`                    | Descarga de modelos y corpus                |
-| `nltk.tgrep`               | `tgrep/`                         | Búsqueda TGrep2 sobre árboles               |
+| `nltk.downloader`          | `downloader/`                    | Model and corpus download                |
+| `nltk.tgrep`               | `tgrep/`                         | TGrep2 search on trees               |
 | `nltk.chat`                | `chat/`                          | Chatbots (Eliza, Iesha, Sun Tzu, Zen)       |
-| `nltk.draw`                | `draw/`                          | Visualización de árboles y dispersión       |
+| `nltk.draw`                | `draw/`                          | Tree and dispersion visualization       |
 
 ---
 
-## 📦 Módulos de la Librería `go-nlp`
+## 'go-nlp` Library 📦 Modules
 
-### Paquetes Principales
+### Main Packages
 
-| Package | Descripción | Estado |
+| Package | Description | Status |
 |---------|-------------|--------|
-| `tokenizer/` | Segmentación de strings en tokens con soporte para múltiples idiomas y procesamiento concurrente | ✅ Stable |
-| `cleaner/` | Eliminación de ruido, puntuación, caracteres especiales y normalización | ✅ Stable |
-| `corpus/` | Lectores de corpus con caché y estadísticas | ✅ Stable |
-| `translate/` | Modelos de traducción estadística (IBM Models 1-3) | ✅ Stable |
-| `stopwords/` | Diccionarios optimizados para remoción instantánea de palabras de relleno | ✅ Stable |
-| `chunk/` | Chunking de entidades nombradas | ✅ Stable |
-| `classify/` | Clasificación (Naive Bayes, MaxEnt, Decision Trees) | ✅ Stable |
+| `tokenizer/` | String segmentation into tokens with multi-language support and concurrent processing | ✅ Stable |
+| `cleaner/` | Noise removal, punctuation, special characters, and normalization | ✅ Stable |
+| `corpus/` | Corpus readers with cache and statistics | ✅ Stable |
+| `translate/` | Statistical translation models (IBM Models 1-3) | ✅ Stable |
+| `stopwords/` | Optimized dictionaries for instant filler word removal | ✅ Stable |
+| `chunk/` | Named entity chunking | ✅ Stable |
+| `classify/` | Classification (Naive Bayes, MaxEnt, Decision Trees) | ✅ Stable |
 | `cluster/` | Clustering (K-Means, EM, GAAC) | ✅ Stable |
 | `collocations/` | Bigram/Trigram scoring | ✅ Stable |
-| `grammar/` | Gramáticas libres de contexto (CFG, PCFG) | ✅ Stable |
+| `grammar/` | Context-free grammars (CFG, PCFG) | ✅ Stable |
 | `parser/` | Syntactic parsers (CYK, Earley, Chart) | ✅ Stable |
-| `lm/` | Modelos de lenguaje (MLE, Kneser-Ney) | ✅ Stable |
-| `metrics/` | Evaluation metrics y confusión matrix | ✅ Stable |
-| `probability/` | Distribuciones de probabilidad | ✅ Stable |
+| `lm/` | Language models (MLE, Kneser-Ney) | ✅ Stable |
+| `metrics/` | Evaluation metrics and confusion matrix | ✅ Stable |
+| `probability/` | Probability distributions | ✅ Stable |
 
-### Paquetes Avanzados
+### Advanced Packages
 
-| Package | Descripción | Estado |
+| Package | Description | Status |
 |---------|-------------|--------|
 | `tagger/` | POS tagging (HMM, Perceptron, TnT) | 🚧 In Progress |
-| `stemmer/` | Stemming y lematización | 🚧 In Progress |
-| `sentiment/` | Análisis de sentimiento | 🚧 In Progress |
-| `text/` | Concordancia y similitud contextual | 🚧 In Progress |
-| `wsd/` | Word sense disambiguation | 🚧 In Progress |
+| `stemmer/` | Stemming and lemmatization | 🚧 In Progress |
+| `sentiment/` | Sentiment Analysis | 🚧 In Progress |
+| `text/` | Contextual concordance and similarity | 🚧 In Progress |
+| `wsd/` | Word without disambiguation | 🚧 In Progress |
 | `chat/` | Chatbots (Elizo, Iesha, Sun Tzu) | 🚧 In Progress |
-| `draw/` | Visualización de árboles | 🚧 In Progress |
+| `draw/` | Tree display | 🚧 In Progress |
 
 ---
 
-## 🚀 Uso Rápido
+## Quick 🚀 Use
 
-### Tokenización
+Tokenization
 
 ```go
 package main
@@ -134,23 +134,23 @@ import (
 )
 
 func main() {
-    // Tokenizador básico
+    // Basic tokenizer
     tok := tokenizer.NewTreebankWordTokenizer()
     tokens := tok.Tokenize("Hello world! How are you doing today?")
     fmt.Printf("Tokens: %v\n", tokens)
     
-    // Tokenización paralela para texto grande
+    // Parallel tokenization for large text
     parallelTok := tokenizer.NewParallelTokenizer(64*1024, 0, tokenizer.NewNLTKWordTokenizer())
     largeTokens := parallelTok.Tokenize(largeText)
     
-    // Tokenización de tweets
+    // Tweet tokenization
     tweetTok := tokenizer.NewDefaultTweetTokenizer()
     tweetTokens := tweetTok.Tokenize("RT @user: Hello World! Check out https://example.com #golang")
     fmt.Printf("Tweet tokens: %v\n", tweetTokens)
 }
 ```
 
-### Limpieza de Texto
+### Text Cleaning
 
 ```go
 package main
@@ -161,7 +161,7 @@ import (
 )
 
 func main() {
-    // Limpieza básica
+    // Basic cleaning
     c := cleaner.New(
         cleaner.WithHTML(true),
         cleaner.WithPunctuation(true),
@@ -170,7 +170,7 @@ func main() {
     cleaned := c.Clean("<p>Hello, World!</p> https://example.com @user #test")
     fmt.Printf("Cleaned: %s\n", cleaned)
     
-    // Limpieza con stopwords
+    // Cleaning with stopwords
     c := cleaner.New(
         cleaner.WithStopwords(true),
         cleaner.WithLanguage("en"),
@@ -178,7 +178,7 @@ func main() {
     cleaned = c.Clean("The quick brown fox jumps over the lazy dog")
     fmt.Printf("Without stopwords: %s\n", cleaned)
     
-    // Limpieza de tokens
+    // Token cleaning
     tokens := []string{"the", "quick", "brown", "fox", "jumps"}
     cleanedTokens := c.CleanTokens(tokens)
     fmt.Printf("Cleaned tokens: %v\n", cleanedTokens)
@@ -204,7 +204,7 @@ func main() {
     words, _ := r.Words()
     fmt.Printf("Total words: %d\n", len(words))
     
-    // Con estadísticas
+    // With statistics
     stats, _ := r.Stats()
     fmt.Printf("Vocabulary size: %d\n", stats.VocabSize)
     
@@ -215,7 +215,7 @@ func main() {
 }
 ```
 
-### Traducción
+Translation
 
 ```go
 package main
@@ -302,7 +302,7 @@ func (p *AIPipeline) ProcessResponse(output string) (string, error) {
 
 ## 🏗️ Arquitectura de Despliegue
 
-### Monetización en RapidAPI
+### Monetization in RapidAPI
 
 ```
 User Request → Go-NLP Preprocessing → AI API Gateway → LLM Provider
@@ -312,35 +312,35 @@ User Request → Go-NLP Preprocessing → AI API Gateway → LLM Provider
                               Cost Optimization (50-80%)
 ```
 
-### Componentes del Gateway
+### Gateway Components
 
-1. **Preprocessing Layer**: go-nlp libraries para limpieza y tokenización
-2. **Prompt Engineering**: Context injection y system prompt assembly
-3. **Model Routing**: Selección de modelo según complejidad de tarea
-4. **API Gateway**: Integración con RapidAPI y LLM providers
-5. **Post-processing**: Translation y output cleaning
-
----
-
-## 📖 Documentación
-
-- `PROJECT_SPEC.md`: Especificación completa del proyecto y arquitectura
-- `examples/`: Ejemplos de uso por módulo
-- `benchmarks/`: Benchmarks de rendimiento
+1. **Preprocessing Layer**: go-nlp libraries for cleaning and tokenization
+2. **Prompt Engineering**: Context injection and system prompt assembly
+3. **Model Routing**: Model selection based on task complexity
+4. **API Gateway**: Integration with RapidAPI and LLM providers
+5. **Post-processing**: Translation and output cleaning
 
 ---
 
-## 🤝 Contribución
+Documentation
 
-### Guías de Contribución
+- `PROJECT_SPEC.md`: Full project specification and architecture
+- `examples/`: Examples of use by module
+- `benchmarks/`: Performance benchmarks
 
-1. Fork el repositorio
-2. Create una feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add some amazing feature'`)
+---
+
+Contribution
+
+### Contribution Guides
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Código de Conducta
+Code of conduct
 
 - Follow Go best practices
 - 80-character line limit

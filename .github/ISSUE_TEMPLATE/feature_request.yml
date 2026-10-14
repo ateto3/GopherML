@@ -1,20 +1,20 @@
 name: ✨ Feature request
-description: Propón una nueva funcionalidad o mejora
+description: Propose a new feature or improvement
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Problema que resuelve
-      description: ¿Qué necesitas hacer que hoy no es posible (o es muy difícil) con GopherML?
+      label: Problem it solves
+      description: What do you need to do that is not possible today (or is very hard) with GopherML?
     validations:
       required: true
   - type: textarea
     id: solution
     attributes:
-      label: Solución propuesta
-      description: API que te gustaría usar (seudocódigo Go bienvenido).
+      label: Proposed solution
+      description: The API you would like to use (Go pseudocode welcome).
       placeholder: |
         ```go
         model := linear_model.NewGradientBoosting()
@@ -25,11 +25,11 @@ body:
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternativas consideradas
+      label: Alternatives considered
   - type: dropdown
     id: area
     attributes:
-      label: Área del proyecto
+      label: Project area
       options:
         - linear_model
         - tree
@@ -40,15 +40,15 @@ body:
         - preprocessing
         - persistence
         - utils
-        - go-nlp (módulo independiente)
-        - documentación
-        - otro
+        - go-nlp (standalone module)
+        - documentation
+        - other
     validations:
       required: true
   - type: checkboxes
     id: perf
     attributes:
-      label: Compromiso de diseño
+      label: Design commitment
       options:
-        - label: Entiendo que el núcleo mantiene **cero dependencias** y prioriza el rendimiento (ver CONTRIBUTING.md)
+        - label: I understand the core keeps **zero dependencies** and prioritizes performance (see CONTRIBUTING.md)
           required: true

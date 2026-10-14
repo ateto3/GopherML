@@ -1,100 +1,100 @@
-# 🤝 Contribuir a GopherML
+# 🤝 Contributing to GopherML
 
-¡Gracias por tu interés en mejorar GopherML! Este documento recoge el flujo de trabajo, los estándares de código y las directrices de rendimiento que seguimos. Al enviar una pull request aceptas también nuestro [Código de Conducta](CODE_OF_CONDUCT.md).
+Thank you for your interest in improving GopherML! This document collects the workflow, code standards and performance guidelines we follow. By submitting a pull request you also accept our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 
-## 1. Puesta en marcha
+## 1. Getting started
 
 ```bash
-# 1. Haz un fork del repositorio y clónalo
-git clone https://github.com/TU-USUARIO/gopherml.git
+# 1. Fork the repository and clone it
+git clone https://github.com/YOUR-USERNAME/gopherml.git
 cd gopherml
 
-# 2. Verifica que todo compila y los tests pasan
+# 2. Verify that everything compiles and the tests pass
 go build ./...
 go vet ./...
 go test ./... -race
 ```
 
-**Requisitos:** Go 1.23 o superior. El proyecto no tiene dependencias externas, así que no hace falta `go mod download` extra.
+**Requirements:** Go 1.23 or later. The project has no external dependencies, so no extra `go mod download` is needed.
 
-> **Nota:** `go-nlp/` es un módulo independiente con su propio `go.mod`. Si tocas ese código,
-> ejecuta también `cd go-nlp && go build ./... && go test ./...`.
-
----
-
-## 2. Estándares de código
-
-1. **Go idiomático:** sin patrones de Python ni Java. Interfaces pequeñas, nombres cortos, cero abstracción innecesaria.
-2. **Gestión de errores explícita:** nunca ignorar el error devuelto por `Fit`, `Predict`, `Load` ni `Save`. Los errores se envuelven con contexto (`fmt.Errorf("...: %w", err)`).
-3. **Constructores:** usa siempre los constructores `New...()`; configuran hiperparámetros por defecto críticos (`NEstimators`, `MaxIter`, etc.).
-4. **Formato:** el código debe pasar `gofmt -w .` y `go vet ./...` sin avisos.
-5. **Documentación de exportados:** toda función, tipo o método exportado lleva un comentario de doc en inglés que empieza por su nombre (convención de Go).
+> **Note:** `go-nlp/` is a standalone module with its own `go.mod`. If you touch that code,
+> also run `cd go-nlp && go build ./... && go test ./...`.
 
 ---
 
-## 3. Directrices de rendimiento (críticas)
+## 2. Code standards
 
-Este **no** es un proyecto de juguete: buscamos eficiencia cercana a C++ para inferencia de baja latencia.
-
-1. **Prioridad de rendimiento:** prefiere *slices* pre-alojados y evita asignaciones de memoria en el *hot path*. Usa `PredictSingle` en lugar de `Predict` dentro de bucles de alta frecuencia.
-2. **Concurrencia nativa:** usa `sync.WaitGroup` y canales solo cuando el paralelismo compensa el coste de la comunicación. Optimizamos para CPUs multinúcleo (ARM64 y x86_64).
-3. **Zero dependencies:** el core depende solo de la librería estándar de Go. No añadir dependencias externas ni Cgo.
-4. **Seguridad de datos:** todos los datos de entrada pasan por `utils.CheckFinite` (o `CheckFiniteSingle` en el hot path) antes de llegar a cualquier modelo.
-5. **Sin regresiones silenciosas:** si optimizas, incluye o actualiza un benchmark en `*_test.go` que lo demuestre.
+1. **Idiomatic Go:** no Python or Java patterns. Small interfaces, short names, zero unnecessary abstraction.
+2. **Explicit error handling:** never ignore the error returned by `Fit`, `Predict`, `Load` or `Save`. Errors are wrapped with context (`fmt.Errorf("...: %w", err)`).
+3. **Constructors:** always use the `New...()` constructors; they set critical default hyperparameters (`NEstimators`, `MaxIter`, etc.).
+4. **Formatting:** code must pass `gofmt -w .` and `go vet ./...` without warnings.
+5. **Documentation of exports:** every exported function, type or method has a doc comment in English that starts with its name (Go convention).
 
 ---
 
-## 4. Directrices para asistentes IA (Windsurf / Antigravity / Copilot…)
+## 3. Performance guidelines (critical)
 
-Si estás generando código con una IA para este repositorio, sigue estas reglas sin excepción:
+This is **not** a toy project: we aim for near-C++ efficiency in low-latency inference.
 
-- **`PredictSingle` en bucles**, nunca `Predict` con una sola muestra.
-- **Siempre validar `if err != nil`** tras `Fit()`, `Predict()`, `Load()`.
-- **Struct embedding:** los modelos como `Lasso` embeben `LinearModel`; los coeficientes se acceden como `model.Coef`.
-- **Constructores `New...()`**, nunca structs literal sin inicializar.
-- **Cero dependencias nuevas** en el `go.mod` del módulo principal.
-- El código generado debe compilar con `go vet ./...` y pasar `go test ./... -race` **antes** de abrir el PR.
+1. **Performance priority:** prefer pre-allocated *slices* and avoid memory allocations on the *hot path*. Use `PredictSingle` instead of `Predict` inside high-frequency loops.
+2. **Native concurrency:** use `sync.WaitGroup` and channels only when the parallelism pays for the cost of communication. We optimize for multi-core CPUs (ARM64 and x86_64).
+3. **Zero dependencies:** the core depends only on the Go standard library. Do not add external dependencies or Cgo.
+4. **Data safety:** all input data goes through `utils.CheckFinite` (or `CheckFiniteSingle` on the hot path) before reaching any model.
+5. **No silent regressions:** if you optimize, include or update a benchmark in `*_test.go` that proves it.
+
+---
+
+## 4. Guidelines for AI assistants (Windsurf / Antigravity / Copilot…)
+
+If you are generating code with an AI for this repository, follow these rules without exception:
+
+- **`PredictSingle` in loops**, never `Predict` with a single sample.
+- **Always validate `if err != nil`** after `Fit()`, `Predict()`, `Load()`.
+- **Struct embedding:** models like `Lasso` embed `LinearModel`; coefficients are accessed as `model.Coef`.
+- **`New...()` constructors**, never uninitialized struct literals.
+- **Zero new dependencies** in the main module's `go.mod`.
+- The generated code must compile with `go vet ./...` and pass `go test ./... -race` **before** opening the PR.
 
 ---
 
 ## 5. Tests
 
-- Todo cambio de comportamiento incluye tests.
-- Ejecuta la suite completa antes de enviar: `go test ./... -race`.
-- Los tests deben ser deterministas: usa `utils.NewRNG(seed)` en lugar de `rand` global.
-- Para cambios de rendimiento, añade un benchmark (`Benchmark*`) en el paquete afectado.
+- Every behavior change includes tests.
+- Run the full suite before submitting: `go test ./... -race`.
+- Tests must be deterministic: use `utils.NewRNG(seed)` instead of the global `rand`.
+- For performance changes, add a benchmark (`Benchmark*`) in the affected package.
 
 ---
 
-## 6. Flujo de pull requests
+## 6. Pull request workflow
 
-1. Crea una rama descriptiva: `feature/mi-feature` o `fix/mi-fix`.
-2. Un objetivo por PR (mezclar features con fixes complica la revisión).
-3. Actualiza la documentación afectada (`README.md`, `USAGE.md`, `docs/`, `CHANGELOG.md`).
-4. Comprueba la checklist del [template de PR](.github/PULL_REQUEST_TEMPLATE.md).
-5. Describe **qué** cambia, **por qué** cambia y **cómo** se ha validado.
+1. Create a descriptive branch: `feature/my-feature` or `fix/my-fix`.
+2. One goal per PR (mixing features with fixes makes review harder).
+3. Update the affected documentation (`README.md`, `USAGE.md`, `docs/`, `CHANGELOG.md`).
+4. Check the [PR template](.github/PULL_REQUEST_TEMPLATE.md) checklist.
+5. Describe **what** changes, **why** it changes and **how** it was validated.
 
-### Convención de commits (recomendada)
+### Commit convention (recommended)
 
 ```
-feat(linear_model): añadir solver alternativo para Ridge
-fix(crypto): validar velas con volumen cero
-docs(api): actualizar referencia de model_selection
-test(ensemble): cubrir PredictProbaSingle
+feat(linear_model): add alternative solver for Ridge
+fix(crypto): validate candles with zero volume
+docs(api): update model_selection reference
+test(ensemble): cover PredictProbaSingle
 ```
 
 ---
 
-## 7. Reportar problemas
+## 7. Reporting issues
 
-- **Bugs:** usa la [plantilla de bug report](https://github.com/ateto3/gopherml/issues/new?template=bug_report.yml).
-- **Funcionalidades:** usa la [plantilla de feature request](https://github.com/ateto3/gopherml/issues/new?template=feature_request.yml).
-- **Vulnerabilidades de seguridad:** no abras una issue pública; sigue [SECURITY.md](SECURITY.md).
+- **Bugs:** use the [bug report template](https://github.com/ateto3/gopherml/issues/new?template=bug_report.yml).
+- **Features:** use the [feature request template](https://github.com/ateto3/gopherml/issues/new?template=feature_request.yml).
+- **Security vulnerabilities:** do not open a public issue; follow [SECURITY.md](SECURITY.md).
 
 ---
 
-## 8. Licencia
+## 8. License
 
-Al contribuir, otorgas tus contribuciones bajo la [licencia MIT](LICENSE) del proyecto.
+By contributing, you grant your contributions under the project's [MIT license](LICENSE).
