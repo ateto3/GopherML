@@ -5,7 +5,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ateto3/gopherml.svg)](https://pkg.go.dev/github.com/ateto3/gopherml)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](#5-tests-y-ci)
-[![CI](https://github.com/ateto3/gopherml/actions/workflows/ci.yml/badge.svg)](https://github.com/ateto3/gopherml/actions/workflows/ci.yml)
 
 **GopherML** is a machine learning library written entirely in **Go**, designed to provide ultra-fast training and inference tools using native concurrency (goroutines) and **without Cgo or external dependencies**. It follows Python’s *scikit-learn* architecture and API, adapted for cryptocurrency bots and high-frequency inference.
 
